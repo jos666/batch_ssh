@@ -14,6 +14,7 @@ from getopt import getopt
 from sys import argv, exit
 import threading
 from time import time
+a = time()
 
 
 class Batch_Ssh(paramiko.SSHClient):
@@ -33,7 +34,7 @@ class Batch_Ssh(paramiko.SSHClient):
     def run_cmd(self, command, write=None):
         try:
             stdin, stdout, stderr = self.exec_command(command)
-            if write:
+            if type(write) == str:
                 stdin.write(write)
                 stdin.flush()
             out = stdout.read()
@@ -68,7 +69,7 @@ class Batch_Ssh(paramiko.SSHClient):
 class par_opt():
     def __init__(self, argv):
         self.argv = argv
-        self.par = 'h:u:c:l:r:o:pk'
+        self.par = 'h:u:c:l:r:o:w:pk'
         self.opt = {}
         self.hosts = []
         self.passwd = ''
@@ -85,6 +86,10 @@ class par_opt():
             self.command = self.opt['-c']
         except:
             pass
+        try:
+            self.write = self.opt['-w']
+        except:
+            self.write = None
 
     def option_shell(self):
         if self.check_argv_str('-shell'):
@@ -151,10 +156,11 @@ class par_opt():
 
     def exec_cmd(self, host, command):
         for ip in host:
-            out, status = self.session[ip].run_cmd(command)
+            write = '123456\n'
+            out, status = self.session[ip].run_cmd(command, write)
             print '-' * 27 + ip + '-' * 27
             print out
-            if status is not True:
+            if not status:
                 self.check_skip()
 
     def _sftp(self, ip, action, localpath, remotepath):
