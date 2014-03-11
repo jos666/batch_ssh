@@ -3,7 +3,10 @@
 #author Finy
 #function Batch ssh and batch scp
 
-import paramiko
+try:
+    import paramiko
+except Exception, E:
+    print 'Not install paramiko libs,', E
 import cmd
 from getpass import getpass
 from getopt import getopt
@@ -163,7 +166,7 @@ class par_opt():
             if self.session[ip].sftp_put(localpath, remotepath):
                 print '-' * 27 + ip + '-' * 27
                 print '[Info] \
-                    Get transfer files successfully,Romtepath:%s' % remotepath
+                    Put transfer files successfully,Romtepath:%s' % remotepath
 
     def sftp(self, ip, action, localpath, remotepath):
         thread = {}
