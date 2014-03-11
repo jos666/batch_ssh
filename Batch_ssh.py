@@ -7,6 +7,7 @@ try:
     import paramiko
 except Exception, E:
     print 'Not install paramiko libs,', E
+    exit()
 import cmd
 from getpass import getpass
 from getopt import getopt
@@ -280,9 +281,7 @@ class shell(cmd.Cmd, par_opt):
 
     def do_connect(self, args):
         ''' connect to ssh server '''
-        t = time()
         self.login(self.host)
-        print 'time', time() - t
 
     def __choose(self, key):
         try:
