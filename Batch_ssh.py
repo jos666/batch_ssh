@@ -34,7 +34,7 @@ class Batch_Ssh(paramiko.SSHClient):
     def run_cmd(self, command, write=None):
         try:
             stdin, stdout, stderr = self.exec_command(command)
-            if type(write) == str:
+            if write:
                 stdin.write(write)
                 stdin.flush()
             out = stdout.read()
