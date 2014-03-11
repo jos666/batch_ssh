@@ -3,10 +3,10 @@
 ##使用
 
 ###多台主机执行命令
-./Batch_ssh.py -u root -p -h "192.168.1.2 192.168.1.3" -c 'echo test' \n
-Password:                     #输入密码不显示                        \n
----------------------------192.168.1.2---------------------------    \n
-uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 \n
+./Batch_ssh.py -u root -p -h "192.168.1.2 192.168.1.3" -c 'echo test' 
+Password:                     #输入密码不显示                        
+---------------------------192.168.1.2---------------------------    <br>
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
 ---------------------------192.168.1.3---------------------------
 uid=0(root) gid=0(root) groups=0(root)
 
