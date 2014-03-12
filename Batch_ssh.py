@@ -14,7 +14,6 @@ from getopt import getopt
 from sys import argv, exit
 import threading
 from time import time
-a = time()
 
 
 class Batch_Ssh(paramiko.SSHClient):
@@ -74,6 +73,7 @@ class par_opt():
     def __init__(self, argv):
         self.argv = argv
         self.par = 'h:u:c:l:r:o:wpk'
+        self.keys = None
         self.opt = {}
         self.hosts = []
         self.passwd = ''
@@ -139,8 +139,6 @@ class par_opt():
     def check_sudo(self):
         if self.check_argv_str('-w'):
             self.keys = self.passwd + '\n'
-        else:
-            self.keys = None
 
     def ssh_shell(self):
         s = shell()
@@ -292,7 +290,9 @@ class shell(cmd.Cmd, par_opt):
 
     def do_connect(self, args):
         ''' connect to ssh server '''
+        s = time()
         self.login(self.host)
+        print 'Connect:',time() - s
 
     def __choose(self, key):
         try:
