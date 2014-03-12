@@ -156,8 +156,7 @@ class par_opt():
             thread[ip] = threading.Thread(target=self._login, args=(ip,))
             thread[ip].start()
         for wait in host:
-            while thread[wait].isAlive():
-                pass
+            thread[wait].join()
 
     def exec_cmd(self, host, command):
         for ip in host:
@@ -190,8 +189,7 @@ class par_opt():
             thread[host].start()
 
         for wait in ip:
-            while thread[wait].isAlive():
-                pass
+            thread[wait].join()
 
     def option_process(self):
         keys = ''.join(self.opt.keys())
