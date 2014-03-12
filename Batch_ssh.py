@@ -22,6 +22,7 @@ class Batch_Ssh(paramiko.SSHClient):
         paramiko.SSHClient.__init__(self)
 
     def login(self, ip, user, passwd, port=22):
+        'login to ssh server'
         self.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             self.connect(ip, port, user, passwd)
@@ -32,6 +33,7 @@ class Batch_Ssh(paramiko.SSHClient):
         return stat
 
     def run_cmd(self, command, write=None):
+        'run command and return stdout'
         try:
             stdin, stdout, stderr = self.exec_command(command)
             if write:
@@ -48,6 +50,7 @@ class Batch_Ssh(paramiko.SSHClient):
             return 'Time out ', False
 
     def sftp_get(self, remotepath, localpath):
+        'sftp get file remotepathfile localpathfile'
         sftpclient = self.open_sftp()
         try:
             sftpclient.get(remotepath, localpath)
@@ -57,6 +60,7 @@ class Batch_Ssh(paramiko.SSHClient):
             return False
 
     def sftp_put(self, localpath, remotepath):
+        'sftp put file  localpathfile remotepathfile'
         sftpclient = self.open_sftp()
         try:
             sftpclient.put(localpath, remotepath)
