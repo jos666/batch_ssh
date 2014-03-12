@@ -77,8 +77,9 @@ class par_opt():
         self.opt = {}
         self.hosts = []
         self.passwd = ''
+        self.user = ''
+        self.command = ''
         self.session = {}
-        self.session_ip = []
 
     def getopts(self):
         opt, args = getopt(self.argv[1:], self.par)
@@ -170,13 +171,15 @@ class par_opt():
         if action == 'get':
             if self.session[ip].sftp_get(remotepath, localpath):
                 print '-' * 27 + ip + '-' * 27
-                print '[Info] \
-                    Get transfer files successfully,Localpath:%s' % localpath
+                print '[Info] ',
+                print 'Get transfer files successfully',
+                print ',Localpath:%s' % localpath
         elif action == 'put':
             if self.session[ip].sftp_put(localpath, remotepath):
                 print '-' * 27 + ip + '-' * 27
-                print '[Info] \
-                    Put transfer files successfully,Romtepath:%s' % remotepath
+                print '[Info] ',
+                print 'Put transfer files successfully',
+                print ',Romtepath:%s' % remotepath
 
     def sftp(self, ip, action, localpath, remotepath):
         thread = {}
@@ -292,9 +295,10 @@ class shell(cmd.Cmd, par_opt):
         ''' connect to ssh server '''
         s = time()
         self.login(self.host)
-        print 'Connect:',time() - s
+        print 'Connect:', time() - s
 
     def __choose(self, key):
+        ''' choose host scp file or excu command '''
         try:
             if key == '*':
                 hosts = self.session.keys()
