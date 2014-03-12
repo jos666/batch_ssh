@@ -39,8 +39,6 @@ class Batch_Ssh(paramiko.SSHClient):
                 stdin.flush()
             out = stdout.read()
             err = stderr.read()
-            #out = ' '
-            #err = ' '
             if out:
                 return out[:-1], True
             else:
@@ -136,7 +134,7 @@ class par_opt():
 
     def check_sudo(self):
         if self.check_argv_str('-w'):
-            self.keys = self.passwd
+            self.keys = self.passwd + '\n'
         else:
             self.keys = None
 
@@ -192,9 +190,8 @@ class par_opt():
 
     def option_process(self):
         keys = ''.join(self.opt.keys())
-        #self.check_hosts()
-        self.check_sudo()
         self.in_passwd()
+        self.check_sudo()
         if '-c' in keys or '-o' in keys:
             self.login(self.hosts)
         if '-o' in keys:
