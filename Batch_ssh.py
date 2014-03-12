@@ -39,6 +39,8 @@ class Batch_Ssh(paramiko.SSHClient):
                 stdin.flush()
             out = stdout.read()
             err = stderr.read()
+            #out = ' '
+            #err = ' '
             if out:
                 return out[:-1], True
             else:
@@ -69,7 +71,7 @@ class Batch_Ssh(paramiko.SSHClient):
 class par_opt():
     def __init__(self, argv):
         self.argv = argv
-        self.par = 'h:u:c:l:r:o:w:pk'
+        self.par = 'h:u:c:l:r:o:wpk'
         self.opt = {}
         self.hosts = []
         self.passwd = ''
@@ -86,10 +88,6 @@ class par_opt():
             self.command = self.opt['-c']
         except:
             pass
-        try:
-            self.write = self.opt['-w']
-        except:
-            self.write = None
 
     def option_shell(self):
         if self.check_argv_str('-shell'):
@@ -136,6 +134,12 @@ class par_opt():
             print '[warning] exec command failure, add -k skip'
             exit(1)
 
+    def check_sudo(self):
+        if self.check_argv_str('-w'):
+            self.keys = self.passwd
+        else:
+            self.keys = None
+
     def ssh_shell(self):
         s = shell()
         s.cmdloop()
@@ -156,8 +160,7 @@ class par_opt():
 
     def exec_cmd(self, host, command):
         for ip in host:
-            write = '123456\n'
-            out, status = self.session[ip].run_cmd(command, write)
+            out, status = self.session[ip].run_cmd(command, self.keys)
             print '-' * 27 + ip + '-' * 27
             print out
             if not status:
@@ -190,18 +193,19 @@ class par_opt():
     def option_process(self):
         keys = ''.join(self.opt.keys())
         #self.check_hosts()
+        self.check_sudo()
         self.in_passwd()
         if '-c' in keys or '-o' in keys:
             self.login(self.hosts)
-
-        if '-c' in keys:
-            self.exec_cmd(self.hosts, self.command)
         if '-o' in keys:
             action = self.opt['-o']
             self.check_sftp_option()
             localpath = self.opt['-l']
             remotepath = self.opt['-r']
             self.sftp(self.hosts, action, localpath, remotepath)
+
+        if '-c' in keys:
+            self.exec_cmd(self.hosts, self.command)
 
     def Usage(self):
         print '''%s  option
