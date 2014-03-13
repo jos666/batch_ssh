@@ -239,6 +239,7 @@ class shell(cmd.Cmd, par_opt):
         self.prompt = 'ssh #'
         self.user = 'root'
         self.passwd = '123456'
+        self.keys = None
         print """default:
             Host:%s
             User:%s
@@ -257,6 +258,7 @@ class shell(cmd.Cmd, par_opt):
                             passwd        is password
                             session       is logind host
                             host          is added host
+                            sudo          is sudo passwd
                     '''
         else:
             if args == 'user':
@@ -269,8 +271,20 @@ class shell(cmd.Cmd, par_opt):
             elif args == 'host':
                 print 'Added Hosts:',
                 print ' '.join(self.host)
-            else:
-                print '[Error] Not options %s' % args
+            elif args == 'sudo':
+                if self.keys:
+                    print 'Sudo passwd : True'
+                else:
+                    print 'Sudo passwd : False'
+
+    def do_sudo_passwd(self, args):
+        if len(args.split()) != 1:
+            print 'sudo_passwd [True|False]'
+        else:
+            if args == 'True':
+                self.keys = self.passwd + '\n'
+            elif args == 'False':
+                self.keys = None
 
     def do_input(self, args):
         ''' input user and passwd '''
