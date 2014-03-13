@@ -286,6 +286,24 @@ class shell(cmd.Cmd, par_opt):
             elif args == 'False':
                 self.keys = None
 
+    def do_del_host(self, args):
+        '''del host in session'''
+        if len(args.split()) != 0:
+            host = args.split()
+            if host is str:
+                host = [host]
+            for i in host:
+                try:
+                    self.session.pop(i)
+                    self.host.remove(i)
+                    delete = True
+                except:
+                    delete = False
+                if delete:
+                    print '[Info] Delete Success'
+                else:
+                    print '[Info] Delete Falure'
+
     def do_input(self, args):
         ''' input user and passwd '''
         if len(args.split()) != 1:
