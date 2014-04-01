@@ -75,29 +75,34 @@ class Cmdline_Parser():
     def __init__(self):
         self.options = None
         self.args = None
-        self.usage = 'Batch_ssh.py -u finy -p -H  192.168.1.5 -c id or Batch \
-        _ssh -M shell'
+        self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
+            '-c id \n \
+      batch_ssh.py -m shell -u root '
         self.parser = optparse.OptionParser(usage=self.usage)
         self.parser.add_option('-u', '--user', dest='user',
-                               help="It user for ssh")
+                               help="It user for ssh",
+                               metavar='user')
         self.parser.add_option('-p', '--passwd', dest='paaswd',
-                              help="It password for ssh ")
+                               help="It password for ssh ",
+                               metavar='password')
         self.parser.add_option('-k', '--skip', dest='skip',
-                              action='store_true',
-                              help='It execute command error'
-                              'skip, default exit')
+                               action='store_true',
+                               help='It execute command error'
+                               'skip, default exit')
 
         self.group = optparse.OptionGroup(self.parser, 'Cmdline', 'The is cmd'
                                           'line mode exec command')
         self.group.add_option('-H', '--host', dest='host',
-                              help="It host  for ssh")
+                              help="It host  for ssh",
+                              metavar='host')
         self.group.add_option('-c', '--command', dest='command',
-                              help="It command for ssh to bash")
+                              help="It command for ssh to bash",
+                              metavar='command')
         self.shellgroup = optparse.OptionGroup(self.parser, 'Shell mode', 'The'
                                                'is shell mode use ssh')
         self.shellgroup.add_option('-m', '--mode', dest='mode',
                                    help='mode for shell and cmdline, '
-                                   'default cmdline')
+                                   'default cmdline', metavar='mode')
 
         self.parser.add_option_group(self.group)
         self.parser.add_option_group(self.shellgroup)
