@@ -69,7 +69,7 @@ class Batch_Ssh(paramiko.SSHClient):
             return False
 
 
-class par_opt():
+class parameter_options():
     def __init__(self, argv):
         self.argv = argv
         self.par = 'h:u:c:l:r:o:wpk'
@@ -93,7 +93,7 @@ class par_opt():
             pass
 
     def option_shell(self):
-        if self.check_argv_str('-shell'):
+        if self.check_argv_str('--shell'):
             self.ssh_shell()
 
     def check_argv_str(self, strs):
@@ -104,7 +104,7 @@ class par_opt():
             return False
 
     def option_help(self):
-        if self.check_argv_str('-help'):
+        if self.check_argv_str('--help'):
             self.Usage()
 
     def check_imp(self):
@@ -218,8 +218,8 @@ class par_opt():
         -r  Is  Romotepath for sftp.
         -k  Is  Whether the error to skip.
         -o  put and get option ,  e.g -o get  -l /tmp/tst -r /tmp/t   .
-        -shell Is python shell
-        -help Is help
+        --shell Is python shell
+        --help Is help
         ''' % self.argv[0]
 
     def main(self):
@@ -228,12 +228,12 @@ class par_opt():
         self.option_process()
 
 
-class shell(cmd.Cmd, par_opt):
+class shell(cmd.Cmd, parameter_options):
     '''This ssh run shell'''
 
     def __init__(self):
         cmd.Cmd.__init__(self)
-        par_opt.__init__(self, ['-k'])
+        parameter_options.__init__(self, ['-k'])
         self.host = []
         self.session = {}
         self.prompt = 'ssh #'
@@ -319,13 +319,13 @@ class shell(cmd.Cmd, par_opt):
 
     def do_input(self, args):
         ''' input user and passwd '''
-        if len(args.split()) != 1:
+        if len(args.split()) != 2:
             print 'Usage: input [user|passwd]'
         else:
-            if args == 'user':
-                self.user = raw_input('Input for username:')
-            elif args == 'passwd':
-                self.passwd = getpass()
+            if 'user' in args:
+                self.user = args.split()[1]
+            elif 'passwd' in args:
+                self.passwd = args.split()[1]
             else:
                 print "[Error] Not found option"
 
@@ -393,5 +393,5 @@ class shell(cmd.Cmd, par_opt):
 
 
 if __name__ == '__main__':
-    m = par_opt(argv)
+    m = parameter_options(argv)
     m.main()
