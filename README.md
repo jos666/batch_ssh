@@ -3,7 +3,7 @@
 ##使用
 
 ###多台主机执行命令
-./Batch_ssh.py -u root -p -h "192.168.1.2 192.168.1.3" -c 'echo test' 
+./Batch_ssh.py -u root -p -h "192.168.1.2 192.168.1.3" -c 'id' 
 Password:                     #输入密码不显示                        
 ---------------------------192.168.1.2---------------------------    <br>
 uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
@@ -23,7 +23,7 @@ Password: <bv>
 
 
 ###互交模式
-./Batch_ssh.py -shell <br>
+./Batch_ssh.py --shell <br>
 default:<br>
             Host:[]<br>
             User:root<br>
@@ -55,5 +55,3 @@ ssh #scp * put /tmp/test /tmp/test1                                  #不管Get 
 [Info]                     Put transfer files successfully,Romtepath:/tmp/test1<br>
 ---------------------------192.168.2.128---------------------------<br>
 [Info]                     Put transfer files successfully,Romtepath:/tmp/test1<br>
-
-
