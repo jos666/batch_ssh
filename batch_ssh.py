@@ -12,7 +12,9 @@ import optparse
 import cmd
 from getpass import getpass
 from getopt import getopt
-#from sys import argv, exit
+from multiprocessing import Pool
+from itertools import repeat
+from sys import argv
 from sys import exit
 import threading
 from time import time
@@ -76,6 +78,8 @@ class Cmdline_Parser():
         self.options = None
         self.args = None
         self.save_session = {}
+        self.error_signal = True
+        self.thread = 2
         self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
             '-c id \n \
       batch_ssh.py -m shell -u root '
@@ -83,13 +87,25 @@ class Cmdline_Parser():
         self.parser.add_option('-u', '--user', dest='user',
                                help="It user for ssh",
                                metavar='user')
-        self.parser.add_option('-p', '--passwd', dest='paaswd',
+        self.parser.add_option('-p', '--passwd', dest='passwd',
                                help="It password for ssh ",
                                metavar='password')
         self.parser.add_option('-k', '--skip', dest='skip',
                                action='store_true',
                                help='It execute command error'
                                'skip, default exit')
+        self.parser.add_option('-o', '--action', dest='action',
+                               help='The is sftp action , put or get',
+                               metavar='action')
+        self.parser.add_option('-l', '--localpath', dest='localpath',
+                               help='The is sftp local file path',
+                               metavar='localpath')
+        self.parser.add_option('-r', '--remotepath', dest='remotepath',
+                               help='The is remote file path',
+                               metavar='remotepath')
+        self.parser.add_option('-t','--thread',dest='thread',
+                                help='The is max run thread , default 2',
+                                metavar='thread')
 
         self.group = optparse.OptionGroup(self.parser, 'Cmdline', 'The is cmd'
                                           'line mode exec command')
@@ -111,58 +127,44 @@ class Cmdline_Parser():
     def get_option(self):
             (self.options, self.args) = self.parser.parse_args()
 
-    def __thread(self, keys, target, *args):
-        thread_pool = {}
-        for key in keys:
-            thread_pool[key] = threading.Thread(target=target, args=(args))
+    def thread_pool(self, func, args1=None, args2=None, args3=None, args4=None):
+        pool  = Pool(processes=self.thread)
+        if any((args1, args2, args3, args4)):
+            data = zip(args1,repeat(args2),repeat(args3),repeat(args4))
+        elif any((args1, args2, args3)):
+            data = zip(args1,repeat(args2),repeat(args3))
+        elif any((args1,args2)):
+            data = zip(args1, repeat(args2))
+        else:
+            print 'Error , exiting'
+            exit()
+        print data
+        #pool.map(func, data)
 
-        for start in thread_pool.keys():
-            thread_pool[start].start()
 
-        for wait in thread_pool.keys():
-            thread_pool[wait].join()
-
-    def __login(self, host, user, passwd):
+    def __login(self,( host, user, passwd)):
         ssh = Batch_Ssh()
         ssh.login(host, user, passwd)
         self.save_session[host] = ssh
 
     def login(self, hostlist):
-        user = self.options['user']
-        passwd = self.options['passwd']
-        self.__thread(hostlist, self.__login, key, user, passwd)
-        thread_pool = {}
-        for host in hostlist:
-            thread_pool[host] = threading.Thread(target=self.__login,
-                                                 args=(host, user, passwd))
+        self.thread_pool(hostlist, self.options.user, self.options.passwd)
 
-        for start in thread_pool.keys():
-            thread_pool[start].start()
-
-        for join in thread_pool.keys():
-            thread_pool[join].join()
-
-    def __exec_cmd(self, host, cmd):
+    def __exec_cmd(self, (host, cmd)):
         if self.save_session[host].login_status:
-            if self.options['sudo']:
-                wirte = self.options['passwd'] + '\n'
+            if self.options.sudo:
+                wirte = self.options.passwd + '\n'
             else:
                 wirte = None
             self.save_session[host].run_cmd(cmd, wirte)
 
     def exec_cmd(self):
-        thread_pool = {}
-        for host in self.save_session.keys():
-            if self.options['command']:
-                thread_pool[host] = threading.Thread(target=self.__exec_cmd, host, self.options['command'])
+        if self.options.command:
+            hostlist = self.save_session.keys()
+            if hostlist:
+                self.thread_pool(hostlist,self.options.command)
 
-                for start in thread_pool.keys():
-                    thread_pool[start].start()
-
-                for join in thread_pool.keys():
-                    thread_pool[join].join()
-
-    def __sftp(self, host, action, localpath, remotepath):
+    def __sftp(self, (host, action, localpath, remotepath)):
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath, localpath+'.'+host):
                 print '-' * 27 + ip + '-' * 27
@@ -177,11 +179,52 @@ class Cmdline_Parser():
                 print ',Romtepath:%s' % remotepath
 
     def sftp(self):
-        thread_pool = {}
+        if self.options.action:
+            if self.options.localpath and self.options.remotepath:
+                hostlist = self.save_session.keys()
+                if hostlist:
+                    self.thread_pool(hostlist, self.options.action, self.options.localpath, self.options.remotepath)
+
+    def process(self):
+        user = self.options.user
+        host = self.options.host
+        passwd = self.options.passwd
+        command = self.options.command
+        action = self.options.action
+        localpath = self.options.localpath
+        remotepath = self.options.remotepath
+        thread = self.options.thread
+        skip = self.options.skip
+        mode = self.options.mode
+
+        if any((host, user, passwd)):
+            hostlist = host.split()
+            self.login(hostlist)
+            if any((command, action, localpath, remotepath)):
+                self.sftp()
+                self.exec_cmd()
+            else:
+                if command:
+                    self.exec_cmd()
+                else:
+                    if any((action, localpath, remotepath)):
+                        self.sftp()
+                    else:
+                        if mode:
+                            if mode == 'shell':
+                                s.shell()
+                                s.cmdloop()
+                            else:
+                                print 'error'
+
 
     def main(self):
-            self.get_option()
-            print self.options
+        if len(argv) < 2:
+            exit()
+        self.get_option()
+        #print dir(self.options)
+        #print self.options
+        self.process()
 
 
 class par_opt():
@@ -508,7 +551,5 @@ class shell(cmd.Cmd, par_opt):
 
 
 if __name__ == '__main__':
-#    m = par_opt(argv)
-#    m.main()
     finy = Cmdline_Parser()
     finy.main()
