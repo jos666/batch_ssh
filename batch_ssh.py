@@ -130,17 +130,17 @@ class Cmdline_Parser():
     def thread_pool(self, func, args1=None, args2=None,
                     args3=None, args4=None):
         pool  = Pool(processes=self.thread)
-        if any((args1, args2, args3, args4)):
+        if args1 and  args2 and args3 and args4:
             data = zip(args1, repeat(args2), repeat(args3), repeat(args4))
-        elif any((args1, args2, args3)):
+        elif args1 and args2 and args3:
             data = zip(args1, repeat(args2), repeat(args3))
-        elif any((args1, args2)):
+        elif args1 and args2:
             data = zip(args1, repeat(args2))
         else:
             print 'Error , exiting'
             exit()
         print data
-        #pool.map(func, data)
+        pool.map(func, data[0])
 
     def __login(self,( host, user, passwd)):
         ssh = Batch_Ssh()
@@ -148,7 +148,7 @@ class Cmdline_Parser():
         self.save_session[host] = ssh
 
     def login(self, hostlist):
-        self.thread_pool(hostlist, self.options.user, self.options.passwd)
+        self.thread_pool(self.__login, hostlist, self.options.user, self.options.passwd)
 
     def __exec_cmd(self, (host, cmd)):
         if self.save_session[host].login_status:
@@ -162,7 +162,7 @@ class Cmdline_Parser():
         if self.options.command:
             hostlist = self.save_session.keys()
             if hostlist:
-                self.thread_pool(hostlist,self.options.command)
+                self.thread_pool(self.__exec_cmd, hostlist,self.options.command)
 
     def __sftp(self, (host, action, localpath, remotepath)):
         if action == 'get':
@@ -183,7 +183,7 @@ class Cmdline_Parser():
             if self.options.localpath and self.options.remotepath:
                 hostlist = self.save_session.keys()
                 if hostlist:
-                    self.thread_pool(hostlist, self.options.action, self.options.localpath, self.options.remotepath)
+                    self.thread_pool(self.__sftp, hostlist, self.options.action, self.options.localpath, self.options.remotepath)
 
     def process(self):
         user = self.options.user
@@ -197,17 +197,18 @@ class Cmdline_Parser():
         skip = self.options.skip
         mode = self.options.mode
 
-        if any((host, user, passwd)):
+        if user and host and passwd:
             hostlist = host.split()
+            print hostlist
             self.login(hostlist)
-            if any((command, action, localpath, remotepath)):
+            if command and  action and localpath and remotepath:
                 self.sftp()
                 self.exec_cmd()
             else:
                 if command:
                     self.exec_cmd()
                 else:
-                    if any((action, localpath, remotepath)):
+                    if action and localpath and remotepath:
                         self.sftp()
                     else:
                         if mode:
