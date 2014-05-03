@@ -127,20 +127,20 @@ class Cmdline_Parser():
     def get_option(self):
             (self.options, self.args) = self.parser.parse_args()
 
-    def thread_pool(self, func, args1=None, args2=None, args3=None, args4=None):
+    def thread_pool(self, func, args1=None, args2=None,
+                    args3=None, args4=None):
         pool  = Pool(processes=self.thread)
         if any((args1, args2, args3, args4)):
-            data = zip(args1,repeat(args2),repeat(args3),repeat(args4))
+            data = zip(args1, repeat(args2), repeat(args3), repeat(args4))
         elif any((args1, args2, args3)):
-            data = zip(args1,repeat(args2),repeat(args3))
-        elif any((args1,args2)):
+            data = zip(args1, repeat(args2), repeat(args3))
+        elif any((args1, args2)):
             data = zip(args1, repeat(args2))
         else:
             print 'Error , exiting'
             exit()
         print data
         #pool.map(func, data)
-
 
     def __login(self,( host, user, passwd)):
         ssh = Batch_Ssh()
@@ -216,7 +216,6 @@ class Cmdline_Parser():
                                 s.cmdloop()
                             else:
                                 print 'error'
-
 
     def main(self):
         if len(argv) < 2:
