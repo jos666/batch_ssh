@@ -21,17 +21,17 @@ from time import time
 class Batch_Ssh(paramiko.SSHClient):
     def __init__(self):
         paramiko.SSHClient.__init__(self)
+        self.login_status = None
 
     def login(self, ip, user, passwd, port=22):
         'login to ssh server'
         self.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             self.connect(ip, port, user, passwd)
-            stat = True
+            self.login_status = True
         except Exception, E:
             print E, ip
-            stat = False
-        return stat
+            self.login_status = False
 
     def run_cmd(self, command, write=None):
         'run command and return stdout'
@@ -75,6 +75,7 @@ class Cmdline_Parser():
     def __init__(self):
         self.options = None
         self.args = None
+        self.save_session = {}
         self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
             '-c id \n \
       batch_ssh.py -m shell -u root '
@@ -110,24 +111,73 @@ class Cmdline_Parser():
     def get_option(self):
             (self.options, self.args) = self.parser.parse_args()
 
-    def option_process(self):
-        def __thread():
-            pass
+    def __thread(self, keys, target, *args):
+        thread_pool = {}
+        for key in keys:
+            thread_pool[key] = threading.Thread(target=target, args=(args))
 
-        def __login():
-            ssh = Batch_Ssh()
-            hosts = self.parser.host.split()
-            hosts = [hosts]
-            ssh.login(self.parser.host, self.parser.user, )
+        for start in thread_pool.keys():
+            thread_pool[start].start()
 
-        def __execute():
-            pass
+        for wait in thread_pool.keys():
+            thread_pool[wait].join()
 
-        def __scp():
-            pass
+    def __login(self, host, user, passwd):
+        ssh = Batch_Ssh()
+        ssh.login(host, user, passwd)
+        self.save_session[host] = ssh
 
-        def __shell():
-            pass
+    def login(self, hostlist):
+        user = self.options['user']
+        passwd = self.options['passwd']
+        self.__thread(hostlist, self.__login, key, user, passwd)
+        thread_pool = {}
+        for host in hostlist:
+            thread_pool[host] = threading.Thread(target=self.__login,
+                                                 args=(host, user, passwd))
+
+        for start in thread_pool.keys():
+            thread_pool[start].start()
+
+        for join in thread_pool.keys():
+            thread_pool[join].join()
+
+    def __exec_cmd(self, host, cmd):
+        if self.save_session[host].login_status:
+            if self.options['sudo']:
+                wirte = self.options['passwd'] + '\n'
+            else:
+                wirte = None
+            self.save_session[host].run_cmd(cmd, wirte)
+
+    def exec_cmd(self):
+        thread_pool = {}
+        for host in self.save_session.keys():
+            if self.options['command']:
+                thread_pool[host] = threading.Thread(target=self.__exec_cmd, host, self.options['command'])
+
+                for start in thread_pool.keys():
+                    thread_pool[start].start()
+
+                for join in thread_pool.keys():
+                    thread_pool[join].join()
+
+    def __sftp(self, host, action, localpath, remotepath):
+        if action == 'get':
+            if self.save_session[host].sftp_get(remotepath, localpath+'.'+host):
+                print '-' * 27 + ip + '-' * 27
+                print '[Info] ',
+                print 'Get %s files successfully'% remotepath,
+                print ',Localpath:%s' % localpath+'.'+host
+        elif action == 'put':
+            if self.session[ip].sftp_put(localpath, remotepath):
+                print '-' * 27 + ip + '-' * 27
+                print '[Info] ',
+                print 'Put %s files successfully'% localpath,
+                print ',Romtepath:%s' % remotepath
+
+    def sftp(self):
+        thread_pool = {}
 
     def main(self):
             self.get_option()
