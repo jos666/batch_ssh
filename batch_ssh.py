@@ -75,7 +75,6 @@ class Cmdline_Parser():
     def __init__(self):
         self.options = None
         self.args = None
-        self.thread = 2
         self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
             '-c id \n \
       batch_ssh.py -m shell -u root '
@@ -127,6 +126,14 @@ class Cmdline_process():
     def __init__(self):
         self.save_session = {}
         self.error_signal = True
+        self.thread = 5
+        self.options = None
+
+    def get_option(self):
+        opt = Cmdline_Parser()
+        opt.get_option()
+        self.options = opt.options
+
 
     def thread_pool(self, func, args1=None, args2=None,
                     args3=None, args4=None):
@@ -141,7 +148,13 @@ class Cmdline_process():
             print 'Error , exiting'
             exit()
         print data
-        pool.map(func, data[0])
+        ac = ['127.0.0.1', '127.0.0.1','127.0.0.1']
+        av = zip(ac,repeat('root'), repeat('123456'))
+        print av
+        for ar in av:
+            pool.apply_async(func, args=(ar))
+        pool.close()
+        pool.join()
 
     def __login(self, (host, user, passwd)):
         ssh = Batch_Ssh()
@@ -399,5 +412,5 @@ class shell(cmd.Cmd):
 
 
 if __name__ == '__main__':
-    finy = Cmdline_Parser()
+    finy = Cmdline_process()
     finy.main()
