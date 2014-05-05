@@ -11,12 +11,10 @@ except Exception, E:
 import optparse
 import cmd
 from getpass import getpass
-from getopt import getopt
 from multiprocessing import Pool
 from itertools import repeat
 from sys import argv
 from sys import exit
-import threading
 from time import time
 
 
@@ -77,8 +75,6 @@ class Cmdline_Parser():
     def __init__(self):
         self.options = None
         self.args = None
-        self.save_session = {}
-        self.error_signal = True
         self.thread = 2
         self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
             '-c id \n \
@@ -103,10 +99,9 @@ class Cmdline_Parser():
         self.parser.add_option('-r', '--remotepath', dest='remotepath',
                                help='The is remote file path',
                                metavar='remotepath')
-        self.parser.add_option('-t','--thread',dest='thread',
-                                help='The is max run thread , default 2',
-                                metavar='thread')
-
+        self.parser.add_option('-t', '--thread', dest='thread',
+                               help='The is max run thread , default 2',
+                               metavar='thread')
         self.group = optparse.OptionGroup(self.parser, 'Cmdline', 'The is cmd'
                                           'line mode exec command')
         self.group.add_option('-H', '--host', dest='host',
@@ -127,10 +122,16 @@ class Cmdline_Parser():
     def get_option(self):
             (self.options, self.args) = self.parser.parse_args()
 
+
+class Cmdline_process():
+    def __init__(self):
+        self.save_session = {}
+        self.error_signal = True
+
     def thread_pool(self, func, args1=None, args2=None,
                     args3=None, args4=None):
-        pool  = Pool(processes=self.thread)
-        if args1 and  args2 and args3 and args4:
+        pool = Pool(processes=self.thread)
+        if args1 and args2 and args3 and args4:
             data = zip(args1, repeat(args2), repeat(args3), repeat(args4))
         elif args1 and args2 and args3:
             data = zip(args1, repeat(args2), repeat(args3))
@@ -142,13 +143,14 @@ class Cmdline_Parser():
         print data
         pool.map(func, data[0])
 
-    def __login(self,( host, user, passwd)):
+    def __login(self, (host, user, passwd)):
         ssh = Batch_Ssh()
         ssh.login(host, user, passwd)
         self.save_session[host] = ssh
 
     def login(self, hostlist):
-        self.thread_pool(self.__login, hostlist, self.options.user, self.options.passwd)
+        self.thread_pool(self.__login, hostlist, self.options.user,
+                         self.options.passwd)
 
     def __exec_cmd(self, (host, cmd)):
         if self.save_session[host].login_status:
@@ -162,20 +164,22 @@ class Cmdline_Parser():
         if self.options.command:
             hostlist = self.save_session.keys()
             if hostlist:
-                self.thread_pool(self.__exec_cmd, hostlist,self.options.command)
+                self.thread_pool(self.__exec_cmd, hostlist,
+                                 self.options.command)
 
     def __sftp(self, (host, action, localpath, remotepath)):
         if action == 'get':
-            if self.save_session[host].sftp_get(remotepath, localpath+'.'+host):
-                print '-' * 27 + ip + '-' * 27
+            if self.save_session[host].sftp_get(remotepath,
+                                                localpath + '.' + host):
+                print '-' * 27 + host + '-' * 27
                 print '[Info] ',
-                print 'Get %s files successfully'% remotepath,
-                print ',Localpath:%s' % localpath+'.'+host
+                print 'Get %s files successfully' % remotepath,
+                print ',Localpath:%s' % localpath + '.' + host
         elif action == 'put':
-            if self.session[ip].sftp_put(localpath, remotepath):
-                print '-' * 27 + ip + '-' * 27
+            if self.session[host].sftp_put(localpath, remotepath):
+                print '-' * 27 + host + '-' * 27
                 print '[Info] ',
-                print 'Put %s files successfully'% localpath,
+                print 'Put %s files successfully' % localpath,
                 print ',Romtepath:%s' % remotepath
 
     def sftp(self):
@@ -183,7 +187,10 @@ class Cmdline_Parser():
             if self.options.localpath and self.options.remotepath:
                 hostlist = self.save_session.keys()
                 if hostlist:
-                    self.thread_pool(self.__sftp, hostlist, self.options.action, self.options.localpath, self.options.remotepath)
+                    self.thread_pool(self.__sftp, hostlist,
+                                     self.options.action,
+                                     self.options.localpath,
+                                     self.options.remotepath)
 
     def process(self):
         user = self.options.user
@@ -201,7 +208,7 @@ class Cmdline_Parser():
             hostlist = host.split()
             print hostlist
             self.login(hostlist)
-            if command and  action and localpath and remotepath:
+            if command and action and localpath and remotepath:
                 self.sftp()
                 self.exec_cmd()
             else:
@@ -213,7 +220,7 @@ class Cmdline_Parser():
                     else:
                         if mode:
                             if mode == 'shell':
-                                s.shell()
+                                s = shell()
                                 s.cmdloop()
                             else:
                                 print 'error'
@@ -227,171 +234,12 @@ class Cmdline_Parser():
         self.process()
 
 
-class par_opt():
-    def __init__(self, argv):
-        self.argv = argv
-        self.par = 'h:u:c:l:r:o:wpk'
-        self.keys = None
-        self.opt = {}
-        self.hosts = []
-        self.passwd = ''
-        self.user = ''
-        self.command = ''
-        self.session = {}
-
-    def getopts(self):
-        opt, args = getopt(self.argv[1:], self.par)
-        for tulp in opt:
-            self.opt[tulp[0]] = tulp[1]
-        self.user = self.opt['-u']
-        self.hosts = self.opt['-h'].split()
-        try:
-            self.command = self.opt['-c']
-        except:
-            pass
-
-    def option_shell(self):
-        if self.check_argv_str('-shell'):
-            self.ssh_shell()
-
-    def check_argv_str(self, strs):
-        try:
-            self.argv.index(strs)
-            return True
-        except:
-            return False
-
-    def option_help(self):
-        if self.check_argv_str('-help'):
-            self.Usage()
-
-    def check_imp(self):
-        self.option_shell()
-        self.option_help()
-        if len(self.argv) == 1:
-            self.Usage()
-            exit(0)
-        keys = ''.join(self.argv)
-        if '-u' not in keys or '-h' not in keys or '-p' not in keys:
-            print keys
-            self.Usage()
-            exit(0)
-
-    def check_sftp_option(self):
-        keys = ' '.join(self.opt.keys())
-        if '-l' not in keys or '-r' not in keys:
-            print '[Error] Sftp not -l or -r option'
-            print keys
-            exit()
-
-    def in_passwd(self):
-        keys = ''.join(self.opt.keys())
-        if '-p' in keys:
-            self.passwd = getpass()
-
-    def check_skip(self):
-        keys = ''.join(self.argv)
-        if '-k' not in keys:
-            print '[warning] exec command failure, add -k skip'
-            exit(1)
-
-    def check_sudo(self):
-        if self.check_argv_str('-w'):
-            self.keys = self.passwd + '\n'
-
-    def ssh_shell(self):
-        s = shell()
-        s.cmdloop()
-
-    def _login(self, ip):
-        sshd = Batch_Ssh()
-        sshd.login(ip, self.user, self.passwd)
-        self.session[ip] = sshd
-
-    def login(self, host):
-        thread = {}
-        for ip in host:
-            thread[ip] = threading.Thread(target=self._login, args=(ip,))
-            thread[ip].start()
-        for wait in host:
-            thread[wait].join()
-
-    def exec_cmd(self, host, command):
-        for ip in host:
-            out, status = self.session[ip].run_cmd(command, self.keys)
-            print '-' * 27 + ip + '-' * 27
-            print out
-            if not status:
-                self.check_skip()
-
-    def _sftp(self, ip, action, localpath, remotepath):
-        if action == 'get':
-            if self.session[ip].sftp_get(remotepath, localpath):
-                print '-' * 27 + ip + '-' * 27
-                print '[Info] ',
-                print 'Get transfer files successfully',
-                print ',Localpath:%s' % localpath
-        elif action == 'put':
-            if self.session[ip].sftp_put(localpath, remotepath):
-                print '-' * 27 + ip + '-' * 27
-                print '[Info] ',
-                print 'Put transfer files successfully',
-                print ',Romtepath:%s' % remotepath
-
-    def sftp(self, ip, action, localpath, remotepath):
-        thread = {}
-        for host in ip:
-            thread[host] = threading.Thread(target=self._sftp,
-                                            args=(host, action,
-                                                  localpath, remotepath))
-            thread[host].start()
-
-        for wait in ip:
-            thread[wait].join()
-
-    def option_process(self):
-        keys = ''.join(self.opt.keys())
-        self.in_passwd()
-        self.check_sudo()
-        if '-c' in keys or '-o' in keys:
-            self.login(self.hosts)
-        if '-o' in keys:
-            action = self.opt['-o']
-            self.check_sftp_option()
-            localpath = self.opt['-l']
-            remotepath = self.opt['-r']
-            self.sftp(self.hosts, action, localpath, remotepath)
-
-        if '-c' in keys:
-            self.exec_cmd(self.hosts, self.command)
-
-    def Usage(self):
-        print '''%s  option
-        -------------------------------------------------------
-        -h  Is ssh host , Can set up multiple, but use " .
-        -u  Is ssh User name
-        -p  is ssh pass ,Don't put the password
-        -c  Is bash command ,Can set up multiple,but use " .
-        -l  Is  Localpath for sftp .
-        -r  Is  Romotepath for sftp.
-        -k  Is  Whether the error to skip.
-        -o  put and get option ,  e.g -o get  -l /tmp/tst -r /tmp/t   .
-        -shell Is python shell
-        -help Is help
-        ''' % self.argv[0]
-
-    def main(self):
-        self.check_imp()
-        self.getopts()
-        self.option_process()
-
-
-class shell(cmd.Cmd, par_opt):
+class shell(cmd.Cmd):
     '''This ssh run shell'''
 
     def __init__(self):
         cmd.Cmd.__init__(self)
-        par_opt.__init__(self, ['-k'])
+        #par_opt.__init__(self, ['-k'])
         self.host = []
         self.session = {}
         self.prompt = 'ssh #'
