@@ -201,7 +201,12 @@ class Cmdline_process():
                 'sftp': self._sftp}
 
         dict_number = apps.keys().index(appname)
-        print '[Info] %s in progress ....' % apps.keys()[dict_number]
+        print self.display('[info] ',
+                           0,
+                           '%s in progress ....' % apps.keys(
+                           )[dict_number],
+                           'YELLOW',
+                           'LIGHT_GREEN')
         for anum, argsto in zip(repeat(len(args)), args):
             #test = '%s:%d' % (argsto[0], randint(1, 999))
             thread_save[argsto[0]] = Thread(target=apps[appname],
@@ -225,8 +230,15 @@ class Cmdline_process():
             thread = 10
         return thread
 
-    def display(self, level, out):
-        pass
+    def display(self, level, indent, out, ticor, concor):
+        result = '{0}{1}{2}{3}{4}{5}{6}'.format(' ' * indent,
+                                                self.colors[ticor],
+                                                level,
+                                                self.colors['ENDC'],
+                                                self.colors[concor],
+                                                out,
+                                                self.colors['ENDC'])
+        return result
 
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
@@ -249,8 +261,8 @@ class Cmdline_process():
             else:
                 wirte = None
             out, status = self.save_session[host].run_cmd(cmd, wirte)
-            print '*' * 27 + host + '*' * 27
-            print out
+            print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
+            print self.display(out, 14, '', 'GREEN', 'GREEN')
 
     def exec_cmd(self):
         hostlist = self.save_session.keys()
@@ -261,11 +273,17 @@ class Cmdline_process():
     def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath,
-                                                localpath + '.' + host):
-                print '-' * 27 + host + '-' * 27
-                print '[Info] ',
-                print 'Get %s files successfully' % remotepath,
-                print ',Localpath:%s' % localpath + '.' + host
+                                                localpath):
+                message = 'Get %s files successfully  ,\
+                    Localpath:%s' % (remotepath, localpath)
+
+                print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
+                print self.display('[Info] ', 14, message,
+                                   'LIGHT_CYAN', 'LIGHT_CYAN')
+                #print '-' * 27 + host + '-' * 27
+                #print '[Info] ',
+                #print 'Get %s files successfully' % remotepath,
+                #print ',Localpath:%s' % localpath + '.' + host
         elif action == 'put':
             if self.save_session[host].sftp_put(localpath, remotepath):
                 print '-' * 27 + host + '-' * 27
@@ -305,7 +323,8 @@ class Cmdline_process():
                 hostlist = self.host.split()
             elif self.config:
                 hostlist = self.config_host(self.config)
-            self.passwd = getpass()
+            if not self.passwd:
+                self.passwd = getpass()
             self.login(hostlist)
             if self.command and self.action and \
                     self.localpath and self.remotepath:
