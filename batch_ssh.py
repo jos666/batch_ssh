@@ -13,9 +13,11 @@ import cmd
 from getpass import getpass
 from multiprocessing import Pool
 from itertools import repeat
+from random import randint
 from sys import argv
 from sys import exit
 from time import time
+from threading import Thread
 
 
 class Batch_Ssh(paramiko.SSHClient):
@@ -109,6 +111,9 @@ class Cmdline_Parser():
         self.group.add_option('-c', '--command', dest='command',
                               help="It command for ssh to bash",
                               metavar='command')
+        self.group.add_option('-s', '--sudo', dest='sudo',
+                              action='store_true',
+                              help="The exec sudo need passwd")
         self.shellgroup = optparse.OptionGroup(self.parser, 'Shell mode', 'The'
                                                'is shell mode use ssh')
         self.shellgroup.add_option('-m', '--mode', dest='mode',
@@ -126,7 +131,7 @@ class Cmdline_process():
     def __init__(self):
         self.save_session = {}
         self.error_signal = True
-        self.thread = 5
+        self.thread = 1
         self.options = None
 
     def get_option(self):
@@ -134,8 +139,7 @@ class Cmdline_process():
         opt.get_option()
         self.options = opt.options
 
-
-    def thread_pool(self, func, args1=None, args2=None,
+    def thread_pool(self, func, args1, args2=None,
                     args3=None, args4=None):
         pool = Pool(processes=self.thread)
         if args1 and args2 and args3 and args4:
@@ -145,42 +149,52 @@ class Cmdline_process():
         elif args1 and args2:
             data = zip(args1, repeat(args2))
         else:
-            print 'Error , exiting'
-            exit()
+            data = [()]
         print data
-        ac = ['127.0.0.1', '127.0.0.1','127.0.0.1']
-        av = zip(ac,repeat('root'), repeat('123456'))
-        print av
-        for ar in av:
-            pool.apply_async(func, args=(ar))
-        pool.close()
-        pool.join()
+        #ac = ['127.0.0.1', '127.0.0.1', '127.0.0.1']
+        #av = zip(ac, repeat('root'), repeat('G00dW0rk'))
+        thread =[]
+        for ar in data:
+            #print 'pool.apply_async(',func,'args=',ar,')'
+            #pool.apply_async(func, args=ar)
+            thread.append(Thread(target=func, args=ar))
+        for ths in thread:
+            ths.start()
 
-    def __login(self, (host, user, passwd)):
+        for join in thread:
+            join.join()
+        print len(thread),self.save_session
+        #print func,data
+
+    def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
         ssh.login(host, user, passwd)
+        host = host +  str(randint(1,999))
+        print host
         self.save_session[host] = ssh
 
     def login(self, hostlist):
-        self.thread_pool(self.__login, hostlist, self.options.user,
+        self.thread_pool(self._login, hostlist, self.options.user,
                          self.options.passwd)
 
-    def __exec_cmd(self, (host, cmd)):
+    def _exec_cmd(self, host, cmd):
         if self.save_session[host].login_status:
             if self.options.sudo:
                 wirte = self.options.passwd + '\n'
             else:
                 wirte = None
-            self.save_session[host].run_cmd(cmd, wirte)
+            out, status = self.save_session[host].run_cmd(cmd, wirte)
+            print '*' * 27 + host + '*' * 27
+            print out
 
     def exec_cmd(self):
         if self.options.command:
             hostlist = self.save_session.keys()
             if hostlist:
-                self.thread_pool(self.__exec_cmd, hostlist,
+                self.thread_pool(self._exec_cmd, hostlist,
                                  self.options.command)
 
-    def __sftp(self, (host, action, localpath, remotepath)):
+    def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath,
                                                 localpath + '.' + host):
@@ -189,7 +203,7 @@ class Cmdline_process():
                 print 'Get %s files successfully' % remotepath,
                 print ',Localpath:%s' % localpath + '.' + host
         elif action == 'put':
-            if self.session[host].sftp_put(localpath, remotepath):
+            if self.save_session[host].sftp_put(localpath, remotepath):
                 print '-' * 27 + host + '-' * 27
                 print '[Info] ',
                 print 'Put %s files successfully' % localpath,
@@ -200,7 +214,7 @@ class Cmdline_process():
             if self.options.localpath and self.options.remotepath:
                 hostlist = self.save_session.keys()
                 if hostlist:
-                    self.thread_pool(self.__sftp, hostlist,
+                    self.thread_pool(self._sftp, hostlist,
                                      self.options.action,
                                      self.options.localpath,
                                      self.options.remotepath)
@@ -219,7 +233,6 @@ class Cmdline_process():
 
         if user and host and passwd:
             hostlist = host.split()
-            print hostlist
             self.login(hostlist)
             if command and action and localpath and remotepath:
                 self.sftp()
@@ -241,6 +254,8 @@ class Cmdline_process():
     def main(self):
         if len(argv) < 2:
             exit()
+        #self.__login('127.0.0.1','root','G00dW0rk')
+        #print self.save_session
         self.get_option()
         #print dir(self.options)
         #print self.options
