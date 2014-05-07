@@ -11,12 +11,14 @@ except Exception, E:
 import optparse
 import cmd
 from getpass import getpass
+from multiprocessing import Process
 from multiprocessing import Pool
 from itertools import repeat
 from random import randint
 from sys import argv
 from sys import exit
 from time import time
+from time import sleep
 from threading import Thread
 
 
@@ -114,6 +116,8 @@ class Cmdline_Parser():
         self.group.add_option('-s', '--sudo', dest='sudo',
                               action='store_true',
                               help="The exec sudo need passwd")
+        self.group.add_option('-f', '--config', dest='config',
+                              help='Host config file, multi host')
         self.shellgroup = optparse.OptionGroup(self.parser, 'Shell mode', 'The'
                                                'is shell mode use ssh')
         self.shellgroup.add_option('-m', '--mode', dest='mode',
@@ -131,8 +135,9 @@ class Cmdline_process():
     def __init__(self):
         self.save_session = {}
         self.error_signal = True
-        self.thread = 1
+        self.thread = 10
         self.options = None
+        self.host = []
 
     def get_option(self):
         opt = Cmdline_Parser()
@@ -141,7 +146,6 @@ class Cmdline_process():
 
     def thread_pool(self, func, args1, args2=None,
                     args3=None, args4=None):
-        pool = Pool(processes=self.thread)
         if args1 and args2 and args3 and args4:
             data = zip(args1, repeat(args2), repeat(args3), repeat(args4))
         elif args1 and args2 and args3:
@@ -150,32 +154,60 @@ class Cmdline_process():
             data = zip(args1, repeat(args2))
         else:
             data = [()]
-        print data
-        #ac = ['127.0.0.1', '127.0.0.1', '127.0.0.1']
-        #av = zip(ac, repeat('root'), repeat('G00dW0rk'))
-        thread =[]
-        for ar in data:
-            #print 'pool.apply_async(',func,'args=',ar,')'
-            #pool.apply_async(func, args=ar)
-            thread.append(Thread(target=func, args=ar))
-        for ths in thread:
-            ths.start()
+        thread = {}
+        tid = 20
+        pool = Pool(processes=10)
+        for thid, ar in zip(range(len(data)), data):
+            if thid == tid:
+                tid += 20
+                sleep(0.5)
+                print thid, tid, ar[0]
+                pool.apply_async(func, args=ar)
 
-        for join in thread:
-            join.join()
-        print len(thread),self.save_session
-        #print func,data
+        print len(thread)
+        print self.save_session
+
+    def thread_control(self, func, keys, args1, args2=None, args3=None,
+                       thread=10):
+        if args1 and args2 and args3:
+            args = zip(keys, repeat(args1), repeat(args2), repeat(args3))
+        elif args1 and args2:
+            args = zip(keys, repeat(args1), repeat(args2))
+        elif args:
+            args = zip(keys, repeat(args1))
+        thread_save = {}
+        thread_start = {}
+        thread_join = {}
+        for argsto in args:
+            test = '%s:%d' % (argsto[0], randint(1, 999))
+            thread_save[test] = Thread(target=func, args=argsto)
+            thread_number = len(thread.keys())
+            if thread_number == thread:
+                pass
+
 
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
-        ssh.login(host, user, passwd)
-        host = host +  str(randint(1,999))
-        print host
-        self.save_session[host] = ssh
+        try:
+            ssh.login(host, user, passwd)
+            key = '%s:%d' % (host, randint(1, 999))
+            self.save_session[key] = ssh
+            #return ssh
+        except:
+            exit(1)
 
     def login(self, hostlist):
-        self.thread_pool(self._login, hostlist, self.options.user,
-                         self.options.passwd)
+        thread = {}
+        for host in hostlist:
+            key = '%s:%d' % (host, randint(1, 999))
+            thread[key] = Thread(target=self._login,
+                                 args=(host, self.options.user,
+                                       self.options.passwd))
+        for keys in thread.keys():
+            thread[keys].start()
+
+        for jkeys in thread.keys():
+            thread[jkeys].join()
 
     def _exec_cmd(self, host, cmd):
         if self.save_session[host].login_status:
@@ -188,11 +220,18 @@ class Cmdline_process():
             print out
 
     def exec_cmd(self):
-        if self.options.command:
-            hostlist = self.save_session.keys()
-            if hostlist:
-                self.thread_pool(self._exec_cmd, hostlist,
-                                 self.options.command)
+        hostlist = self.save_session.keys()
+        if hostlist:
+            thread = {}
+            for host in hostlist:
+                thread[host] = Thread(target=self._exec_cmd, args=(host,
+                                      self.options.command))
+            thread_keys = thread.keys()
+            for skeys in thread_keys:
+                thread[skeys].start()
+
+            for jkeys in thread_keys:
+                thread[jkeys].join(timeout=30)
 
     def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
@@ -230,6 +269,18 @@ class Cmdline_process():
         thread = self.options.thread
         skip = self.options.skip
         mode = self.options.mode
+        config = self.options.config
+
+        if config:
+            r = open(config)
+            r1 = open(config)
+            for linenum in range(len(r1.readlines())):
+                self.host.append(r.readline().replace('\n', ''))
+            if user and passwd:
+                self.login(self.host)
+                if command:
+                    print '1'
+                    self.exec_cmd()
 
         if user and host and passwd:
             hostlist = host.split()
@@ -429,3 +480,4 @@ class shell(cmd.Cmd):
 if __name__ == '__main__':
     finy = Cmdline_process()
     finy.main()
+    #print finy.save_session.values()
