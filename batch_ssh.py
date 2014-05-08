@@ -16,7 +16,6 @@ from random import randint
 from sys import argv
 from sys import exit
 from time import time
-from time import sleep
 from threading import Thread
 from os.path import exists
 
@@ -136,13 +135,31 @@ class Cmdline_process():
         self.save_session = {}
         self.error_signal = True
         self.thread = 10
-        self.options = None
         self.host = []
+        self.user = None
+        self.passwd = None
+        self.action = None
+        self.localpath = None
+        self.remotepath = None
+        self.sudo = None
+        self.skip = None
+        self.mode = None
+        self.help = None
 
     def get_option(self):
         opt = Cmdline_Parser()
         opt.get_option()
-        self.options = opt.options
+        self.thread = opt.options.thread
+        self.host = opt.options.host
+        self.user = opt.options.user
+        self.passwd = opt.options.passwd
+        self.action = opt.options.action
+        self.localpath = opt.options.localpath
+        self.remotepath = opt.options.remotepath
+        self.sudo = opt.options.sudo
+        self.skip = opt.options.skip
+        self.config = opt.options.config
+        self.mode = opt.options.mode
         return opt
 
     def thread_control(self, appname, keys, args1, args2=None, args3=None,
@@ -178,6 +195,13 @@ class Cmdline_process():
                     thread_join[key1] = thread_start[key1]
                     thread_start.pop(key1)
 
+    def thread_num(self):
+        if self.options.thread:
+            thread = self.options.thread
+        else:
+            thread = 10
+        return thread
+
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
         try:
@@ -190,7 +214,7 @@ class Cmdline_process():
     def login(self, hostlist):
         self.thread_control('login', hostlist,
                             self.options.user, self.options.passwd,
-                            thread=20)
+                            thread=self.thread_num())
 
     def _exec_cmd(self, host, cmd):
         if self.save_session[host].login_status:
@@ -205,7 +229,8 @@ class Cmdline_process():
     def exec_cmd(self):
         hostlist = self.save_session.keys()
         if hostlist:
-            self.thread_control('exec_cmd', hostlist, self.options.command)
+            self.thread_control('exec_cmd', hostlist,
+                                self.options.command, thread=self.thread_num())
 
     def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
@@ -230,7 +255,8 @@ class Cmdline_process():
                     self.thread_control('sftp', hostlist,
                                         self.options.action,
                                         self.options.localpath,
-                                        self.options.remotepath)
+                                        self.options.remotepath,
+                                        thread=self.thread_num())
 
     def config_host(self, config):
         host = []
@@ -243,45 +269,38 @@ class Cmdline_process():
 
     def main(self):
         option = self.get_option()
+        self.help = option.parser.print_help
         if len(argv) < 2:
             option.parser.print_help()
             exit()
-        user = self.options.user
-        host = self.options.host
-        passwd = self.options.passwd
-        command = self.options.command
-        action = self.options.action
-        localpath = self.options.localpath
-        remotepath = self.options.remotepath
-        thread = self.options.thread
-        skip = self.options.skip
-        mode = self.options.mode
-        config = self.options.config
 
-        if user and host or config:
-            if host:
-                hostlist = host.split()
-            elif config:
-                hostlist = self.config_host(config)
-            self.options.passwd = getpass()
+        if self.user and self.host or self.config:
+            if self.host:
+                hostlist = self.host.split()
+            elif self.config:
+                hostlist = self.config_host(self.config)
+            self.passwd = getpass()
             self.login(hostlist)
-            if command and action and localpath and remotepath:
+            if self.command and self.action and \
+                    self.localpath and self.remotepath:
                 self.sftp()
                 self.exec_cmd()
             else:
-                if command:
+                if self.command:
                     self.exec_cmd()
                 else:
-                    if action and localpath and remotepath:
+                    if self.action and self.localpath and self.remotepath:
                         self.sftp()
                     else:
-                        if mode:
-                            if mode == 'shell':
-                                s = shell()
-                                s.cmdloop()
-                            else:
-                                print 'error'
-
+                        self.help()
+            if self.mode:
+                if self.mode == 'shell':
+                    s = shell()
+                    s.cmdloop()
+                else:
+                    self.help()
+        else:
+            self.help()
 
 
 class shell(cmd.Cmd, Cmdline_process):
