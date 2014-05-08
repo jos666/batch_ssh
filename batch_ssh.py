@@ -11,8 +11,6 @@ except Exception, E:
 import optparse
 import cmd
 from getpass import getpass
-from multiprocessing import Process
-from multiprocessing import Pool
 from itertools import repeat
 from random import randint
 from sys import argv
@@ -20,6 +18,7 @@ from sys import exit
 from time import time
 from time import sleep
 from threading import Thread
+from os.path import exists
 
 
 class Batch_Ssh(paramiko.SSHClient):
@@ -80,7 +79,8 @@ class Cmdline_Parser():
         self.options = None
         self.args = None
         self.usage = 'batch_ssh.py -u finy -p -H  192.168.1.5 ' +  \
-            '-c id \n \
+            '-c id  \n  \
+     batch_ssh.py -f hostfile -u root -p abc \n \
       batch_ssh.py -m shell -u root '
         self.parser = optparse.OptionParser(usage=self.usage)
         self.parser.add_option('-u', '--user', dest='user',
@@ -143,48 +143,40 @@ class Cmdline_process():
         opt = Cmdline_Parser()
         opt.get_option()
         self.options = opt.options
+        return opt
 
-    def thread_pool(self, func, args1, args2=None,
-                    args3=None, args4=None):
-        if args1 and args2 and args3 and args4:
-            data = zip(args1, repeat(args2), repeat(args3), repeat(args4))
-        elif args1 and args2 and args3:
-            data = zip(args1, repeat(args2), repeat(args3))
-        elif args1 and args2:
-            data = zip(args1, repeat(args2))
-        else:
-            data = [()]
-        thread = {}
-        tid = 20
-        pool = Pool(processes=10)
-        for thid, ar in zip(range(len(data)), data):
-            if thid == tid:
-                tid += 20
-                sleep(0.5)
-                print thid, tid, ar[0]
-                pool.apply_async(func, args=ar)
-
-        print len(thread)
-        print self.save_session
-
-    def thread_control(self, func, keys, args1, args2=None, args3=None,
+    def thread_control(self, appname, keys, args1, args2=None, args3=None,
                        thread=10):
         if args1 and args2 and args3:
             args = zip(keys, repeat(args1), repeat(args2), repeat(args3))
         elif args1 and args2:
             args = zip(keys, repeat(args1), repeat(args2))
-        elif args:
+        elif args1:
             args = zip(keys, repeat(args1))
         thread_save = {}
         thread_start = {}
         thread_join = {}
-        for argsto in args:
-            test = '%s:%d' % (argsto[0], randint(1, 999))
-            thread_save[test] = Thread(target=func, args=argsto)
-            thread_number = len(thread.keys())
-            if thread_number == thread:
-                pass
+        apps = {'login': self._login,
+                'exec_cmd': self._exec_cmd,
+                'sftp': self._sftp}
 
+        dict_number = apps.keys().index(appname)
+        print '[Info] %s waiting ....' % apps.keys()[dict_number]
+        for anum, argsto in zip(repeat(len(args)), args):
+            test = '%s:%d' % (argsto[0], randint(1, 999))
+            thread_save[test] = Thread(target=apps[appname],
+                                       args=argsto,
+                                       name=apps.keys()[dict_number])
+            thread_number = len(thread_save.keys())
+            if thread_number == thread or thread_number == anum - 1:
+                for key in thread_save.keys():
+                    thread_save[key].start()
+                    thread_start[key] = thread_save[key]
+                    thread_save.pop(key)
+                for key1 in thread_start.keys():
+                    thread_start[key1].join(timeout=30)
+                    thread_join[key1] = thread_start[key1]
+                    thread_start.pop(key1)
 
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
@@ -192,22 +184,13 @@ class Cmdline_process():
             ssh.login(host, user, passwd)
             key = '%s:%d' % (host, randint(1, 999))
             self.save_session[key] = ssh
-            #return ssh
         except:
             exit(1)
 
     def login(self, hostlist):
-        thread = {}
-        for host in hostlist:
-            key = '%s:%d' % (host, randint(1, 999))
-            thread[key] = Thread(target=self._login,
-                                 args=(host, self.options.user,
-                                       self.options.passwd))
-        for keys in thread.keys():
-            thread[keys].start()
-
-        for jkeys in thread.keys():
-            thread[jkeys].join()
+        self.thread_control('login', hostlist,
+                            self.options.user, self.options.passwd,
+                            thread=20)
 
     def _exec_cmd(self, host, cmd):
         if self.save_session[host].login_status:
@@ -222,16 +205,7 @@ class Cmdline_process():
     def exec_cmd(self):
         hostlist = self.save_session.keys()
         if hostlist:
-            thread = {}
-            for host in hostlist:
-                thread[host] = Thread(target=self._exec_cmd, args=(host,
-                                      self.options.command))
-            thread_keys = thread.keys()
-            for skeys in thread_keys:
-                thread[skeys].start()
-
-            for jkeys in thread_keys:
-                thread[jkeys].join(timeout=30)
+            self.thread_control('exec_cmd', hostlist, self.options.command)
 
     def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
@@ -253,12 +227,25 @@ class Cmdline_process():
             if self.options.localpath and self.options.remotepath:
                 hostlist = self.save_session.keys()
                 if hostlist:
-                    self.thread_pool(self._sftp, hostlist,
-                                     self.options.action,
-                                     self.options.localpath,
-                                     self.options.remotepath)
+                    self.thread_control('sftp', hostlist,
+                                        self.options.action,
+                                        self.options.localpath,
+                                        self.options.remotepath)
 
-    def process(self):
+    def config_host(self, config):
+        host = []
+        if exists(config):
+            r = open(config)
+            r1 = open(config)
+            for linenum in range(len(r1.readlines())):
+                host.append(r.readline().replace('\n', ''))
+            return host
+
+    def main(self):
+        option = self.get_option()
+        if len(argv) < 2:
+            option.parser.print_help()
+            exit()
         user = self.options.user
         host = self.options.host
         passwd = self.options.passwd
@@ -271,19 +258,11 @@ class Cmdline_process():
         mode = self.options.mode
         config = self.options.config
 
-        if config:
-            r = open(config)
-            r1 = open(config)
-            for linenum in range(len(r1.readlines())):
-                self.host.append(r.readline().replace('\n', ''))
-            if user and passwd:
-                self.login(self.host)
-                if command:
-                    print '1'
-                    self.exec_cmd()
-
-        if user and host and passwd:
-            hostlist = host.split()
+        if user and host and passwd or config:
+            if host:
+                hostlist = host.split()
+            elif config:
+                hostlist = self.config_host(config)
             self.login(hostlist)
             if command and action and localpath and remotepath:
                 self.sftp()
@@ -302,23 +281,15 @@ class Cmdline_process():
                             else:
                                 print 'error'
 
-    def main(self):
-        if len(argv) < 2:
-            exit()
-        #self.__login('127.0.0.1','root','G00dW0rk')
-        #print self.save_session
-        self.get_option()
-        #print dir(self.options)
-        #print self.options
-        self.process()
 
 
-class shell(cmd.Cmd):
+class shell(cmd.Cmd, Cmdline_process):
     '''This ssh run shell'''
 
     def __init__(self):
         cmd.Cmd.__init__(self)
         #par_opt.__init__(self, ['-k'])
+        Cmdline_process.__init__(self)
         self.host = []
         self.session = {}
         self.prompt = 'ssh #'
@@ -480,4 +451,3 @@ class shell(cmd.Cmd):
 if __name__ == '__main__':
     finy = Cmdline_process()
     finy.main()
-    #print finy.save_session.values()
