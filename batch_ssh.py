@@ -274,22 +274,18 @@ class Cmdline_process():
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath,
                                                 localpath):
-                message = 'Get %s files successfully  ,\
-                    Localpath:%s' % (remotepath, localpath)
-
+                message = 'Get %s files successfully, Localpath:%s' % (
+                    remotepath, localpath)
                 print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
                 print self.display('[Info] ', 14, message,
-                                   'LIGHT_CYAN', 'LIGHT_CYAN')
-                #print '-' * 27 + host + '-' * 27
-                #print '[Info] ',
-                #print 'Get %s files successfully' % remotepath,
-                #print ',Localpath:%s' % localpath + '.' + host
+                                   'LIGHT_GREEN', 'LIGHT_GREEN')
         elif action == 'put':
             if self.save_session[host].sftp_put(localpath, remotepath):
-                print '-' * 27 + host + '-' * 27
-                print '[Info] ',
-                print 'Put %s files successfully' % localpath,
-                print ',Romtepath:%s' % remotepath
+                message = 'Put %s files successfully,remotepath:%s' % (
+                    localpath, remotepath)
+                print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
+                print self.display('[Info] ', 14, message,
+                                   'LIGHT_GREEN', 'LIGHT_GREEN')
 
     def sftp(self):
         if self.action:
