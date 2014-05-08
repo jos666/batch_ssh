@@ -8,11 +8,12 @@ try:
 except Exception, E:
     print 'Not install paramiko libs,', E
     exit()
-import optparse
 import cmd
+from optparse import OptionParser
+from optparse import OptionGroup
 from getpass import getpass
 from itertools import repeat
-from random import randint
+#from random import randint
 from sys import argv
 from sys import exit
 from time import time
@@ -81,7 +82,7 @@ class Cmdline_Parser():
             '-c id  \n  \
      batch_ssh.py -f hostfile -u root -p abc \n \
       batch_ssh.py -m shell -u root '
-        self.parser = optparse.OptionParser(usage=self.usage)
+        self.parser = OptionParser(usage=self.usage)
         self.parser.add_option('-u', '--user', dest='user',
                                help="It user for ssh",
                                metavar='user')
@@ -104,8 +105,8 @@ class Cmdline_Parser():
         self.parser.add_option('-t', '--thread', dest='thread',
                                help='The is max run thread , default 2',
                                metavar='thread')
-        self.group = optparse.OptionGroup(self.parser, 'Cmdline', 'The is cmd'
-                                          'line mode exec command')
+        self.group = OptionGroup(self.parser, 'Cmdline', 'The is cmd'
+                                 'line mode exec command')
         self.group.add_option('-H', '--host', dest='host',
                               help="It host  for ssh",
                               metavar='host')
@@ -117,8 +118,8 @@ class Cmdline_Parser():
                               help="The exec sudo need passwd")
         self.group.add_option('-f', '--config', dest='config',
                               help='Host config file, multi host')
-        self.shellgroup = optparse.OptionGroup(self.parser, 'Shell mode', 'The'
-                                               'is shell mode use ssh')
+        self.shellgroup = OptionGroup(self.parser, 'Shell mode', 'The'
+                                      'is shell mode use ssh')
         self.shellgroup.add_option('-m', '--mode', dest='mode',
                                    help='mode for shell and cmdline, '
                                    'default cmdline', metavar='mode')
@@ -136,6 +137,7 @@ class Cmdline_process():
         self.error_signal = True
         self.thread = 10
         self.host = []
+        self.command = None
         self.user = None
         self.passwd = None
         self.action = None
@@ -145,6 +147,26 @@ class Cmdline_process():
         self.skip = None
         self.mode = None
         self.help = None
+        self.colors = {
+            'BLACK': '\033[0;30m',
+            'DARK_GRAY': '\033[1;30m',
+            'LIGHT_GRAY': '\033[0;37m',
+            'BLUE': '\033[0;34m',
+            'LIGHT_BLUE': '\033[1;34m',
+            'GREEN': '\033[0;32m',
+            'LIGHT_GREEN': '\033[1;32m',
+            'CYAN': '\033[0;36m',
+            'LIGHT_CYAN': '\033[1;36m',
+            'RED': '\033[0;31m',
+            'LIGHT_RED': '\033[1;31m',
+            'PURPLE': '\033[0;35m',
+            'LIGHT_PURPLE': '\033[1;35m',
+            'BROWN': '\033[0;33m',
+            'YELLOW': '\033[1;33m',
+            'WHITE': '\033[1;37m',
+            'DEFAULT_COLOR': '\033[00m',
+            'RED_BOLD': '\033[01;31m',
+            'ENDC': '\033[0m'}
 
     def get_option(self):
         opt = Cmdline_Parser()
@@ -153,6 +175,7 @@ class Cmdline_process():
         self.host = opt.options.host
         self.user = opt.options.user
         self.passwd = opt.options.passwd
+        self.command = opt.options.command
         self.action = opt.options.action
         self.localpath = opt.options.localpath
         self.remotepath = opt.options.remotepath
@@ -178,14 +201,14 @@ class Cmdline_process():
                 'sftp': self._sftp}
 
         dict_number = apps.keys().index(appname)
-        print '[Info] %s waiting ....' % apps.keys()[dict_number]
+        print '[Info] %s in progress ....' % apps.keys()[dict_number]
         for anum, argsto in zip(repeat(len(args)), args):
-            test = '%s:%d' % (argsto[0], randint(1, 999))
-            thread_save[test] = Thread(target=apps[appname],
-                                       args=argsto,
-                                       name=apps.keys()[dict_number])
+            #test = '%s:%d' % (argsto[0], randint(1, 999))
+            thread_save[argsto[0]] = Thread(target=apps[appname],
+                                            args=argsto,
+                                            name=apps.keys()[dict_number])
             thread_number = len(thread_save.keys())
-            if thread_number == thread or thread_number == anum - 1:
+            if thread_number == thread or thread_number == anum:
                 for key in thread_save.keys():
                     thread_save[key].start()
                     thread_start[key] = thread_save[key]
@@ -196,30 +219,33 @@ class Cmdline_process():
                     thread_start.pop(key1)
 
     def thread_num(self):
-        if self.options.thread:
-            thread = self.options.thread
+        if self.thread:
+            thread = self.thread
         else:
             thread = 10
         return thread
+
+    def display(self, level, out):
+        pass
 
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
         try:
             ssh.login(host, user, passwd)
-            key = '%s:%d' % (host, randint(1, 999))
-            self.save_session[key] = ssh
+            #key = '%s:%d' % (host, randint(1, 999))
+            self.save_session[host] = ssh
         except:
             exit(1)
 
     def login(self, hostlist):
         self.thread_control('login', hostlist,
-                            self.options.user, self.options.passwd,
+                            self.user, self.passwd,
                             thread=self.thread_num())
 
     def _exec_cmd(self, host, cmd):
         if self.save_session[host].login_status:
-            if self.options.sudo:
-                wirte = self.options.passwd + '\n'
+            if self.sudo:
+                wirte = self.passwd + '\n'
             else:
                 wirte = None
             out, status = self.save_session[host].run_cmd(cmd, wirte)
@@ -230,7 +256,7 @@ class Cmdline_process():
         hostlist = self.save_session.keys()
         if hostlist:
             self.thread_control('exec_cmd', hostlist,
-                                self.options.command, thread=self.thread_num())
+                                self.command, thread=self.thread_num())
 
     def _sftp(self, host, action, localpath, remotepath):
         if action == 'get':
@@ -248,14 +274,14 @@ class Cmdline_process():
                 print ',Romtepath:%s' % remotepath
 
     def sftp(self):
-        if self.options.action:
-            if self.options.localpath and self.options.remotepath:
+        if self.action:
+            if self.localpath and self.remotepath:
                 hostlist = self.save_session.keys()
                 if hostlist:
                     self.thread_control('sftp', hostlist,
-                                        self.options.action,
-                                        self.options.localpath,
-                                        self.options.remotepath,
+                                        self.action,
+                                        self.localpath,
+                                        self.remotepath,
                                         thread=self.thread_num())
 
     def config_host(self, config):
