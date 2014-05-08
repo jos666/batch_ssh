@@ -258,11 +258,12 @@ class Cmdline_process():
         mode = self.options.mode
         config = self.options.config
 
-        if user and host and passwd or config:
+        if user and host or config:
             if host:
                 hostlist = host.split()
             elif config:
                 hostlist = self.config_host(config)
+            self.options.passwd = getpass()
             self.login(hostlist)
             if command and action and localpath and remotepath:
                 self.sftp()
