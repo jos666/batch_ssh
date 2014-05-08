@@ -187,6 +187,7 @@ class Cmdline_process():
 
     def thread_control(self, appname, keys, args1, args2=None, args3=None,
                        thread=10):
+        start_time = time()
         if args1 and args2 and args3:
             args = zip(keys, repeat(args1), repeat(args2), repeat(args3))
         elif args1 and args2:
@@ -222,6 +223,10 @@ class Cmdline_process():
                     thread_start[key1].join(timeout=30)
                     thread_join[key1] = thread_start[key1]
                     thread_start.pop(key1)
+        count_time = time() - start_time
+        print self.display('Task execution time:',0, str(count_time) + ' s',
+                           'YELLOW',
+                           'LIGHT_CYAN')
 
     def thread_num(self):
         if self.thread:
