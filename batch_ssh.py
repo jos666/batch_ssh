@@ -13,7 +13,7 @@ from optparse import OptionParser
 from optparse import OptionGroup
 from getpass import getpass
 from itertools import repeat
-#from random import randint
+from random import randint
 from sys import argv
 from sys import exit
 from time import time
@@ -135,7 +135,7 @@ class Cmdline_process():
     def __init__(self):
         self.save_session = {}
         self.error_signal = True
-        self.thread = 10
+        self.thread = None
         self.host = []
         self.command = None
         self.user = None
@@ -200,6 +200,7 @@ class Cmdline_process():
         apps = {'login': self._login,
                 'exec_cmd': self._exec_cmd,
                 'sftp': self._sftp}
+        #print args
 
         dict_number = apps.keys().index(appname)
         print self.display('[info] ',
@@ -209,22 +210,22 @@ class Cmdline_process():
                            'YELLOW',
                            'LIGHT_GREEN')
         for anum, argsto in zip(repeat(len(args)), args):
-            #test = '%s:%d' % (argsto[0], randint(1, 999))
-            thread_save[argsto[0]] = Thread(target=apps[appname],
+            test = '%s:%d' % (argsto[0], randint(1, 999))
+            thread_save[test] = Thread(target=apps[appname],
                                             args=argsto,
                                             name=apps.keys()[dict_number])
             thread_number = len(thread_save.keys())
-            if thread_number == thread or thread_number == anum:
+            if thread_number == int(thread) or thread_number == anum:
                 for key in thread_save.keys():
                     thread_save[key].start()
                     thread_start[key] = thread_save[key]
                     thread_save.pop(key)
                 for key1 in thread_start.keys():
-                    thread_start[key1].join(timeout=30)
+                    thread_start[key1].join(timeout=50)
                     thread_join[key1] = thread_start[key1]
                     thread_start.pop(key1)
         count_time = time() - start_time
-        print self.display('Task execution time:',0, str(count_time) + ' s',
+        print self.display('Task execution time:', 0, str(count_time) + ' s',
                            'YELLOW',
                            'LIGHT_CYAN')
 
@@ -249,8 +250,8 @@ class Cmdline_process():
         ssh = Batch_Ssh()
         try:
             ssh.login(host, user, passwd)
-            #key = '%s:%d' % (host, randint(1, 999))
-            self.save_session[host] = ssh
+            key = '%s:%d' % (host, randint(1, 999))
+            self.save_session[key] = ssh
         except:
             exit(1)
 
@@ -269,8 +270,7 @@ class Cmdline_process():
             print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
             print self.display(out, 14, '', 'GREEN', 'GREEN')
 
-    def exec_cmd(self):
-        hostlist = self.save_session.keys()
+    def exec_cmd(self, hostlist):
         if hostlist:
             self.thread_control('exec_cmd', hostlist,
                                 self.command, thread=self.thread_num())
@@ -292,10 +292,9 @@ class Cmdline_process():
                 print self.display('[Info] ', 14, message,
                                    'LIGHT_GREEN', 'LIGHT_GREEN')
 
-    def sftp(self):
+    def sftp(self, hostlist):
         if self.action:
             if self.localpath and self.remotepath:
-                hostlist = self.save_session.keys()
                 if hostlist:
                     self.thread_control('sftp', hostlist,
                                         self.action,
@@ -327,26 +326,23 @@ class Cmdline_process():
             if not self.passwd:
                 self.passwd = getpass()
             self.login(hostlist)
+            hostlist = self.save_session.keys()
             if self.command and self.action and \
                     self.localpath and self.remotepath:
-                self.sftp()
-                self.exec_cmd()
+                self.sftp(hostlist)
+                self.exec_cmd(hostlist)
             else:
                 if self.command:
-                    self.exec_cmd()
+                    self.exec_cmd(hostlist)
                 else:
                     if self.action and self.localpath and self.remotepath:
-                        self.sftp()
-                    else:
-                        self.help()
+                        self.sftp(hostlist)
             if self.mode:
                 if self.mode == 'shell':
                     s = shell()
                     s.cmdloop()
                 else:
                     self.help()
-        else:
-            self.help()
 
 
 class shell(cmd.Cmd, Cmdline_process):
@@ -357,11 +353,12 @@ class shell(cmd.Cmd, Cmdline_process):
         #par_opt.__init__(self, ['-k'])
         Cmdline_process.__init__(self)
         self.host = []
-        self.session = {}
+        self.save_session = {}
         self.prompt = 'ssh #'
         self.user = 'root'
         self.passwd = '123456'
         self.keys = None
+        self.get_option()
         print """default:
             Host:%s
             User:%s
@@ -417,7 +414,7 @@ class shell(cmd.Cmd, Cmdline_process):
                 delete = False
         elif name == 'session':
             try:
-                self.session.pop(host)
+                self.save_session.pop(host)
                 delete = True
             except:
                 delete = False
@@ -466,11 +463,11 @@ class shell(cmd.Cmd, Cmdline_process):
         ''' choose host scp file or excu command '''
         try:
             if key == '*':
-                hosts = self.session.keys()
+                hosts = self.save_session.keys()
             else:
-                index = self.session.keys().index(key)
+                index = self.save_session.keys().index(key)
                 hosts = []
-                hosts.append(self.session.keys()[index])
+                hosts.append(self.save_session.keys()[index])
             stat = True
         except:
             hosts = []
@@ -486,7 +483,8 @@ class shell(cmd.Cmd, Cmdline_process):
             command = ' '.join(args.split()[1:])
             stat, hosts = self.__choose(host)
             if stat:
-                self.exec_cmd(hosts, command)
+                self.command = command
+                self.exec_cmd(hosts)
             else:
                 print '[Error] Not found hosts:%s' % host
 
@@ -504,12 +502,12 @@ class shell(cmd.Cmd, Cmdline_process):
                     e.g: sftp host put /tmp/test /tmp/test1'''
         else:
             host = args_list[0]
-            action = args_list[1]
-            localpath = args_list[2]
-            remotepath = args_list[3]
             stat, hosts = self.__choose(host)
             if stat:
-                self.sftp(hosts, action, localpath, remotepath)
+                self.action = args_list[1]
+                self.localpath = args_list[2]
+                self.remotepath = args_list[3]
+                self.sftp(hosts)
             else:
                 print '[Error] Not found hosts:%s' % host
 
