@@ -183,6 +183,10 @@ class Cmdline_process():
         self.skip = opt.options.skip
         self.config = opt.options.config
         self.mode = opt.options.mode
+        if self.host:
+            self.host = self.host.split()
+        elif self.config:
+            self.host = self.config_host(self.config)
         return opt
 
     def thread_control(self, appname, keys, args1, args2=None, args3=None,
@@ -318,14 +322,15 @@ class Cmdline_process():
             option.parser.print_help()
             exit()
 
+        if self.mode:
+            if self.mode == 'shell':
+                s = shell()
+                s.cmdloop()
+
         if self.user and self.host or self.config:
-            if self.host:
-                hostlist = self.host.split()
-            elif self.config:
-                hostlist = self.config_host(self.config)
             if not self.passwd:
                 self.passwd = getpass()
-            self.login(hostlist)
+            self.login(self.host)
             hostlist = self.save_session.keys()
             if self.command and self.action and \
                     self.localpath and self.remotepath:
@@ -337,12 +342,8 @@ class Cmdline_process():
                 else:
                     if self.action and self.localpath and self.remotepath:
                         self.sftp(hostlist)
-            if self.mode:
-                if self.mode == 'shell':
-                    s = shell()
-                    s.cmdloop()
-                else:
-                    self.help()
+                    else:
+                        self.help()
 
 
 class shell(cmd.Cmd, Cmdline_process):
@@ -386,7 +387,7 @@ class shell(cmd.Cmd, Cmdline_process):
                 print 'Passwd:', self.passwd
             elif args == 'session':
                 print 'Logind host:',
-                print ' '.join(self.session.keys())
+                print ' '.join(self.save_session.keys())
             elif args == 'host':
                 print 'Added Hosts:',
                 print ' '.join(self.host)
@@ -455,21 +456,21 @@ class shell(cmd.Cmd, Cmdline_process):
 
     def do_connect(self, args):
         ''' connect to ssh server '''
-        s = time()
         self.login(self.host)
-        print 'Connect:', time() - s
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''
         try:
-            if key == '*':
-                hosts = self.save_session.keys()
-            else:
+            if key != '*':
                 index = self.save_session.keys().index(key)
                 hosts = []
                 hosts.append(self.save_session.keys()[index])
+            else:
+                hosts = self.save_session.keys()
+
             stat = True
-        except:
+        except Exception, E:
+            print E
             hosts = []
             stat = False
         return stat, hosts
@@ -479,19 +480,19 @@ class shell(cmd.Cmd, Cmdline_process):
         if len(args) == 0:
             print 'Usage:cmd host command ,or cmd * command .  * is all'
         else:
-            host = args.split()[0]
-            command = ' '.join(args.split()[1:])
-            stat, hosts = self.__choose(host)
-            if stat:
-                self.command = command
-                self.exec_cmd(hosts)
-            else:
-                print '[Error] Not found hosts:%s' % host
+            #host = args.split()[0]
+            command = ' '.join(args.split()[0:])
+            #stat, hosts = self.__choose(host)
+            #if stat:
+            self.command = command
+            self.exec_cmd(self.save_session.keys())
+            #else:
+            #    print '[Error] Not found hosts:%s' % host
 
     def do_exit(self, args):
         ''' exit shell '''
-        for session in self.session.keys():
-            self.session[session].close()
+        for session in self.save_session.keys():
+            self.save_session[session].close()
         exit(0)
 
     def do_scp(self, args):
