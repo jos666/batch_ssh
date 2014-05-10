@@ -1,4 +1,4 @@
-#Batch_Ssh
+#batch_Ssh
 
 ##使用
 
@@ -52,6 +52,3 @@ Password:                     #输入密码不显示
         uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
 192.168.1.3 <br>
         uid=0(root) gid=0(root) groups=0(root)   <br>
-
-
-
