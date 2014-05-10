@@ -2,10 +2,14 @@
 
 ##使用
 
+##切换版本
+git clone http://git.oschina.net/finy/batch-ssh.git <br>
+git checkout 0.0.2<br>
+
 ###使用配置文件登陆多台主机
 cat host
-192.168.1.2
-192.168.1.3
+192.168.1.2 <br>
+192.168.1.3 <br>
 
 ./batch_ssh.py -f host -u root -c id <br>
 Password:                     #输入密码不显示<br>
