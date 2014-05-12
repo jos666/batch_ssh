@@ -7,7 +7,7 @@ git clone http://git.oschina.net/finy/batch-ssh.git <br>
 git checkout 0.0.2<br>
 
 ###使用配置文件登陆多台主机
-cat host
+cat host <br>
 192.168.1.2 <br>
 192.168.1.3 <br>
 
