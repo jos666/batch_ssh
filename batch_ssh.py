@@ -500,10 +500,10 @@ class shell(cmd.Cmd, Cmdline_process):
             command = ' '.join(args.split()[1:])
             hosts = self.__choose(host)
             self.command = command
-            if hosts:
+            if hosts and command:
                 self.exec_cmd(self.save_session.keys())
             else:
-                print '[Error] Not found host:', host
+                print '[Error] Not found host:', host, 'Or not command'
 
     def do_exit(self, args):
         ''' exit shell '''
