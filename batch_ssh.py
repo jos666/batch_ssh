@@ -368,6 +368,7 @@ class shell(cmd.Cmd, Cmdline_process):
         #par_opt.__init__(self, ['-k'])
         Cmdline_process.__init__(self)
         self.host = []
+        self.session = {}
         self.save_session = {}
         self.prompt = 'Control #'
         self.user = 'root'
@@ -472,6 +473,20 @@ class shell(cmd.Cmd, Cmdline_process):
         ''' connect to ssh server '''
         self.login(self.host)
 
+    def do_use(self, args):
+        argslist = args.split()
+        if len(argslist) == 1:
+            host = argslist[0]
+            if host == '*':
+                self.session = self.save_session
+                self.prompt = '*@Control#'
+            else:
+                try:
+                    self.session = {host: self.save_session[host]}
+                    self.prompt = '%s@Control#' % host
+                except Exception, E:
+                    print 'Not found host', E
+
     def __choose(self, key):
         ''' choose host scp file or excu command '''
         kwargs = {'*': self.save_session.keys()}
@@ -496,14 +511,15 @@ class shell(cmd.Cmd, Cmdline_process):
         if len(args) == 0:
             print 'Usage:cmd host command ,or cmd * command .  * is all'
         else:
-            host = args.split()[0]
-            command = ' '.join(args.split()[1:])
-            hosts = self.__choose(host)
+            #host = args.split()[0]
+            command = ' '.join(args.split()[0:])
+            #hosts = self.__choose(host)
             self.command = command
-            if hosts and command:
-                self.exec_cmd(self.save_session.keys())
+            if command:
+                self.exec_cmd(self.session.keys())
             else:
-                print '[Error] Not found host:', host, 'Or not command'
+                pass
+                #print '[Error] Not found host:', host, 'Or not command'
 
     def do_exit(self, args):
         ''' exit shell '''
