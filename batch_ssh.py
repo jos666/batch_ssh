@@ -255,14 +255,26 @@ class Cmdline_process():
             else:
                 out = ' ' * indent + out
 
-        result = '{0}{1}{2}{3}{4}{5}{6}'.format(' ' * 0,
-                                                self.colors[ticor],
-                                                level,
-                                                self.colors['ENDC'],
-                                                self.colors[concor],
-                                                out,
-                                                self.colors['ENDC'])
-        return result
+        try:
+            result = '{0}{1}{2}{3}{4}{5}{6}'.format(' ' * 0,
+                                                    self.colors[ticor],
+                                                    level,
+                                                    self.colors['ENDC'],
+                                                    self.colors[concor],
+                                                    out,
+                                                    self.colors['ENDC'])
+            return result
+        except Exception, E:
+            print E
+            result = '{0}{1}{2}{3}{4}{5}{6}'.format(' ' * 0,
+                                                    self.colors[ticor],
+                                                    level,
+                                                    self.colors['ENDC'],
+                                                    self.colors[concor],
+                                                    unicode(out,'utf8'),
+                                                    self.colors['ENDC'])
+
+            return result
 
     def _login(self, host, user, passwd):
         ssh = Batch_Ssh()
@@ -479,7 +491,7 @@ class shell(cmd.Cmd, Cmdline_process):
             host = argslist[0]
             if host == '*':
                 self.session = self.save_session
-                self.prompt = '*@Control#'
+                self.prompt = '\033[0;31mALL@Control#\033[0m'
             else:
                 try:
                     self.session = {host: self.save_session[host]}
@@ -530,17 +542,16 @@ class shell(cmd.Cmd, Cmdline_process):
     def do_scp(self, args):
         ''' put file or get file for sftp'''
         args_list = args.split()
-        if len(args_list) != 4:
+        if len(args_list) != 3:
             print '''Usage: scp host action localpath remotepath  ,* is All
                     e.g: sftp host put /tmp/test /tmp/test1'''
         else:
-            host = args_list[0]
-            hosts = self.__choose(host)
-            if hosts:
-                self.action = args_list[1]
-                self.localpath = args_list[2]
-                self.remotepath = args_list[3]
-                self.sftp(hosts)
+            host = self.session.keys()
+            if host:
+                self.action = args_list[0]
+                self.localpath = args_list[1]
+                self.remotepath = args_list[2]
+                self.sftp(host)
             else:
                 print '[Error] Not found hosts:%s' % host
 
