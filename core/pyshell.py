@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+#coding:utf8
+#date 2014.03.10
+#author:finy
+
 import cmd
 from core import cmdline
 from getpass import getpass
@@ -118,6 +123,7 @@ class shell(cmd.Cmd, cmdline.process):
         self.login(self.host)
 
     def do_use(self, args):
+        'cmd command used hosts'
         argslist = args.split()
         if len(argslist) == 1:
             host = argslist[0]
@@ -132,6 +138,7 @@ class shell(cmd.Cmd, cmdline.process):
                     print 'Not found host', E
 
     def do_terminal(self, args):
+        'use terminal for host'
         if len(args) == 0:
             print  "e.g: terminal host"
         else:
@@ -148,7 +155,6 @@ class shell(cmd.Cmd, cmdline.process):
                     channel.close()
             else:
                 print 'host not found for %s' % host
-
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''

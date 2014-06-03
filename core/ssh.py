@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+#coding:utf8
+#date 2014.03.20
+#author:finy
+
 import paramiko
 
 

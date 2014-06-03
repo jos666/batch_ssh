@@ -4,7 +4,7 @@
 
 ##切换版本
 git clone http://git.oschina.net/finy/batch-ssh.git <br>
-git checkout 0.0.2<br>
+git checkout 0.0.3<br>
 
 ###使用配置文件登陆多台主机
 cat host <br>
@@ -47,6 +47,11 @@ Cortrol #scp * put /tmp/aa /tmp/test             #把本地文件上传到所有
             [Info]  Put transfer files successfully,Romtepath:/tmp/test <br>
 192.168.1.3:
             [Info]  Put transfer files successfully,Romtepath:/tmp/test <br
+
+###登录多台机器后进行切换Terminal
+Cortrol # terminal 192.168.1.2
+login terminal ing .... <br>
+[root@finy]#
 
 
 ###多台主机执行命令

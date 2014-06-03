@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+#coding:utf8
+#date 2014.04.03
+#author:finy
+
 from threading import Thread
 from optparse import OptionParser
 from optparse import OptionGroup
@@ -7,11 +12,8 @@ from core.ssh import ssh
 from time import time
 from os.path import exists
 from sys import argv
-#from core.pyshell import shell as shell_opt
-#from  core import pyshell
 
 
-#class Cmdline_Parser():
 class Parser():
     def __init__(self):
         self.options = None
@@ -69,7 +71,6 @@ class Parser():
             (self.options, self.args) = self.parser.parse_args()
 
 
-#class Cmdline_process():
 class process():
     def __init__(self):
         self.save_session = {}
