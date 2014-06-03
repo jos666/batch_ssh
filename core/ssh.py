@@ -1,0 +1,54 @@
+import paramiko
+
+
+class ssh(paramiko.SSHClient):
+    def __init__(self):
+        paramiko.SSHClient.__init__(self)
+        self.login_status = None
+
+    def login(self, ip, user, passwd, port=22):
+        'login to ssh server'
+        self.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            self.connect(ip, port, user, passwd)
+            self.login_status = True
+        except Exception, E:
+            print E, ip
+            self.login_status = False
+
+    def run_cmd(self, command, write=None):
+        'run command and return stdout'
+        try:
+            stdin, stdout, stderr = self.exec_command(command)
+            if write:
+                stdin.write(write)
+                stdin.flush()
+            out = stdout.read()
+            err = stderr.read()
+            if out:
+                return out[:-1], True
+            else:
+                return err[:-1], False
+        except Exception, E:
+            print '[Error] run_cmd ', E
+            return 'Time out ', False
+
+    def sftp_get(self, remotepath, localpath):
+        'sftp get file remotepathfile localpathfile'
+        sftpclient = self.open_sftp()
+        try:
+            sftpclient.get(remotepath, localpath)
+            return True
+        except Exception, E:
+            print '[Error] sftp get', E
+            return False
+
+    def sftp_put(self, localpath, remotepath):
+        'sftp put file  localpathfile remotepathfile'
+        sftpclient = self.open_sftp()
+        try:
+            sftpclient.put(localpath, remotepath)
+            return True
+        except Exception, E:
+            print '[Error] sftp put ', E
+            return False
