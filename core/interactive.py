@@ -1,6 +1,14 @@
 import socket
 import sys
-from paramiko.py3compat import u
+try:
+    from paramiko.py3compat import u
+except ImportError:
+    print "Not Import paramiko.py3compat module, "
+    print 'Please Run : yum install python-setuptools'
+    print 'easy_install pip '
+    print 'pip install paramiko --upgrade'
+    print 'pip install pycrypto-on-pypi'
+    exit()
 
 # windows does not have termios...
 try:

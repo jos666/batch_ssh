@@ -3,17 +3,23 @@
 #date 2014.03.20
 #author:finy
 
-import paramiko
+try:
+    from paramiko import SSHClient
+    from paramiko import AutoAddPolicy
+except AttributeError:
+    print "import Module failure"
+    print "Please run:"
+    print "           pip install pycrypto-on-pypi"
 
 
-class ssh(paramiko.SSHClient):
+class ssh(SSHClient):
     def __init__(self):
-        paramiko.SSHClient.__init__(self)
+        SSHClient.__init__(self)
         self.login_status = None
 
     def login(self, ip, user, passwd, port=22):
         'login to ssh server'
-        self.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.set_missing_host_key_policy(AutoAddPolicy())
         try:
             self.connect(ip, port, user, passwd)
             self.login_status = True
