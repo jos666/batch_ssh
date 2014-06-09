@@ -140,11 +140,14 @@ class shell(cmd.Cmd, cmdline.process):
     def do_terminal(self, args):
         'use terminal for host'
         if len(args) == 0:
-            print  "e.g: terminal host"
+            print "e.g: terminal host"
         else:
             host = args.split()[0]
             if host in ' '.join(self.save_session.keys()):
-                session = {host: self.save_session[host]}
+                try:
+                    session = {host: self.save_session[host]}
+                except KeyError:
+                    print "Not found host: %s" % host
                 try:
                     print "login terminal ing ....."
                     channel = session[host].invoke_shell()
