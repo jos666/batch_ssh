@@ -1,5 +1,7 @@
+#coding:utf8
 import socket
 import sys
+
 try:
     from paramiko.py3compat import u
 except ImportError:
