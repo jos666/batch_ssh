@@ -29,30 +29,32 @@ class ssh(SSHClient):
 
     def run_cmd(self, command, write=None):
         'run command and return stdout'
-        try:
-            stdin, stdout, stderr = self.exec_command(command)
-            if write:
-                stdin.write(write)
-                stdin.flush()
-            out = stdout.read()
-            err = stderr.read()
-            if out:
-                return out[:-1], True
-            else:
-                return err[:-1], False
-        except Exception, E:
-            print '[Error] run_cmd ', E
-            return 'Time out ', False
+        if self.login_status:
+            try:
+                stdin, stdout, stderr = self.exec_command(command)
+                if write:
+                    stdin.write(write)
+                    stdin.flush()
+                out = stdout.read()
+                err = stderr.read()
+                if out:
+                    return out[:-1], True
+                else:
+                    return err[:-1], False
+            except Exception, E:
+                print '[Error] run_cmd ', E
+                return 'Time out ', False
 
     def sftp_get(self, remotepath, localpath):
         'sftp get file remotepathfile localpathfile'
-        sftpclient = self.open_sftp()
-        try:
-            sftpclient.get(remotepath, localpath)
-            return True
-        except Exception, E:
-            print '[Error] sftp get', E
-            return False
+        if self.login_status:
+            sftpclient = self.open_sftp()
+            try:
+                sftpclient.get(remotepath, localpath)
+                return True
+            except Exception, E:
+                print '[Error] sftp get', E
+                return False
 
     def sftp_put(self, localpath, remotepath):
         'sftp put file  localpathfile remotepathfile'

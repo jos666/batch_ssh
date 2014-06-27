@@ -249,14 +249,14 @@ class process():
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath,
                                                 localpath):
-                message = 'Get %s files successfully, Localpath:%s' % (
+                message = 'GET %s file successfully, LocalPath:%s' % (
                     remotepath, localpath)
                 print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
                 print self.display('', 14, '[Info] ' + message,
                                    'LIGHT_GREEN', 'LIGHT_GREEN')
         elif action == 'put':
             if self.save_session[host].sftp_put(localpath, remotepath):
-                message = 'Put %s files successfully,remotepath:%s' % (
+                message = 'PUT %s file successfully,RemotePath:%s' % (
                     localpath, remotepath)
                 print self.display(host, 0, ':', 'LIGHT_CYAN', 'LIGHT_CYAN')
                 print self.display(' ', 14, '[Info] ' + message,
