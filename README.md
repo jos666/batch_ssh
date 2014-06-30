@@ -34,7 +34,7 @@ Cortrol # input passwd
 Password:                     #输入密码不显示
 Cortrol # connect
 [Info] login in process
-Cortrol #cmd * id                                #对所以主机进行控制
+Cortrol #cmd * id                                #对所以主机进行控制  <br>
 192.168.1.2:<br>
             uid=0(root) gid=0(root) groups=0(root)<br>
 192.168.1.3:<br>
@@ -46,17 +46,17 @@ Cortrol #scp * put /tmp/aa /tmp/test             #把本地文件上传到所有
 192.168.1.2: <br>
             [Info]  Put transfer files successfully,Romtepath:/tmp/test <br>
 192.168.1.3:
-            [Info]  Put transfer files successfully,Romtepath:/tmp/test <br
+            [Info]  Put transfer files successfully,Romtepath:/tmp/test <br>
 
 ###登录多台机器后进行切换Terminal
-Cortrol # terminal 192.168.1.2
+Cortrol # terminal 192.168.1.2<br>
 login terminal ing .... <br>
-[root@finy]#
+[root@finy]# <br>
 
 
 ###多台主机执行命令
-./batch_ssh.py -u root -H "192.168.1.2 192.168.1.3" -c 'id' 
-Password:                     #输入密码不显示                        
+./batch_ssh.py -u root -H "192.168.1.2 192.168.1.3" -c 'id'  <br>
+Password:                     #输入密码不显示                   <br>     
 192.168.1.2:   <br>
         uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
 192.168.1.3 <br>
