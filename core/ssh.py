@@ -48,6 +48,7 @@ class ssh(SSHClient):
     def sftp_get(self, remotepath, localpath):
         'sftp get file remotepathfile localpathfile'
         if self.login_status:
+            print self.login_status
             sftpclient = self.open_sftp()
             try:
                 sftpclient.get(remotepath, localpath)
@@ -58,10 +59,11 @@ class ssh(SSHClient):
 
     def sftp_put(self, localpath, remotepath):
         'sftp put file  localpathfile remotepathfile'
-        sftpclient = self.open_sftp()
-        try:
-            sftpclient.put(localpath, remotepath)
-            return True
-        except Exception, E:
-            print '[Error] sftp put ', E
-            return False
+        if self.login_status:
+            sftpclient = self.open_sftp()
+            try:
+                sftpclient.put(localpath, remotepath)
+                return True
+            except Exception, E:
+                print '[Error] sftp put ', E
+                return False
