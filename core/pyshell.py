@@ -6,7 +6,11 @@
 import cmd
 from core import cmdline
 from getpass import getpass
-from core import interactive
+try:
+    from pexpect import spawn
+except ImportError:
+    print 'Import pexpect Error, run: pip install pexpect'
+    exit()
 
 
 class shell(cmd.Cmd, cmdline.process):
@@ -115,6 +119,8 @@ class shell(cmd.Cmd, cmdline.process):
 
     def do_add_host(self, args):
         '''add host e.g: add_host ip '''
+        if self.host is not True:
+            self.host = []
         for i in args.split():
             self.host.append(i)
 
@@ -143,21 +149,17 @@ class shell(cmd.Cmd, cmdline.process):
             print "e.g: terminal host"
         else:
             host = args.split()[0]
-            if host in ' '.join(self.save_session.keys()):
+            if self.user and self.passwd:
+                cmd = '/usr/bin/ssh %s@%s ' % (self.user, host)
                 try:
-                    session = {host: self.save_session[host]}
-                except KeyError:
-                    print "Not found host: %s" % host
-                try:
-                    print "login terminal ing ....."
-                    channel = session[host].invoke_shell()
-                    interactive.interactive_shell(channel)
+                    child = spawn(cmd, timeout=10)
+                    child.expect('(yes/no)', timeout=5)
+                    child.sendline('yes')
+                    child.expect('password:', timeout=5)
+                    child.sendline(self.passwd)
+                    child.interact()
                 except Exception, E:
-                    print 'login terminal failured , %s' % E
-                finally:
-                    channel.close()
-            else:
-                print 'host not found for %s' % host
+                    print 'Login Terminal Falure', E
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''
