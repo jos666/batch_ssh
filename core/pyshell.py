@@ -6,11 +6,7 @@
 import cmd
 from core import cmdline
 from getpass import getpass
-try:
-    from pexpect import spawn
-except ImportError:
-    print 'Import pexpect Error, run: pip install pexpect'
-    exit()
+from core.terminal import Terminal
 
 
 class shell(cmd.Cmd, cmdline.process):
@@ -150,16 +146,8 @@ class shell(cmd.Cmd, cmdline.process):
         else:
             host = args.split()[0]
             if self.user and self.passwd:
-                cmd = '/usr/bin/ssh %s@%s ' % (self.user, host)
-                try:
-                    child = spawn(cmd, timeout=10)
-                    child.expect('(yes/no)', timeout=5)
-                    child.sendline('yes')
-                    child.expect('password:', timeout=5)
-                    child.sendline(self.passwd)
-                    child.interact()
-                except Exception, E:
-                    print 'Login Terminal Falure', E
+                client = Terminal(host, self.user, self.passwd, timeout=5)
+                client.run()
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''
