@@ -97,7 +97,7 @@ class Terminal(spawn):
         mid = self.match_id()
         self.process(mid)
         cols, rows = self.getwinsize()
-        if cols or rows:
+        if cols and rows:
             self.setwinsize(rows, cols)
         self.interact()
         self.close()
