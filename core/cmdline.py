@@ -12,6 +12,9 @@ from core.ssh import ssh
 from time import time
 from os.path import exists
 from sys import argv
+import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 
 class Parser():
@@ -205,16 +208,7 @@ class process():
                                                     self.colors['ENDC'])
             return result
         except Exception, E:
-            print E
-            result = '{0}{1}{2}{3}{4}{5}{6}'.format(' ' * 0,
-                                                    self.colors[ticor],
-                                                    level,
-                                                    self.colors['ENDC'],
-                                                    self.colors[concor],
-                                                    unicode(out, 'utf8'),
-                                                    self.colors['ENDC'])
-
-            return result
+            print "display", E
 
     def _login(self, host, user, passwd):
         sshclient = ssh()

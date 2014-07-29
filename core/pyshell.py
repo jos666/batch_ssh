@@ -6,9 +6,6 @@
 import cmd
 from core import cmdline
 from getpass import getpass
-import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
 try:
     from pexpect import spawn
 except ImportError:
