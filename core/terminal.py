@@ -2,12 +2,12 @@
 #author:finy
 
 try:
-    from pexpect import spawn
+    import pexpect
 except ImportError:
     print 'Import pexpect Error, run: pip install pexpect'
 
 
-class Terminal(spawn):
+class Terminal(pexpect.spawn):
     def __init__(self, ip, user, passwd, searchwindowsize=None,
                  logfile=None, cwd=None, env=None, ignore_sighup=True,
                  timeout=10):
@@ -15,34 +15,34 @@ class Terminal(spawn):
         self.passwd = passwd
         self.user = user
         self.command = 'ssh %s@%s' % (self.user, self.ip)
-        self.match_list = ['(yes/no)', 'password:', 'Offending key in']
+        self.match_list = ['(yes/no)', 'password:', 'Offending key in',
+                           'Last login: ', pexpect.EOF, pexpect.TIMEOUT]
         self.timeout = timeout
         self.logfile = logfile
         self.cwd = cwd
         self.env = env
         self.ignore_sighup = ignore_sighup
         self.searchwindowsize = searchwindowsize
-        spawn.__init__(self, self.command, args=[], timeout=self.timeout,
-                       maxread=2000, searchwindowsize=self.searchwindowsize,
-                       logfile=self.logfile, cwd=self.cwd, env=self.env,
-                       ignore_sighup=self.ignore_sighup)
+        pexpect.spawn.__init__(self, self.command, args=[],
+                               timeout=self.timeout, maxread=2000,
+                               searchwindowsize=self.searchwindowsize,
+                               logfile=self.logfile, cwd=self.cwd,
+                               env=self.env, ignore_sighup=self.ignore_sighup)
 
     def match_id(self):
         try:
             mid = self.expect(self.match_list, timeout=self.timeout)
+            if mid == 4 or mid > 4:
+                raise pexpect.EOF('metch_id Error')
             return mid
-        except Exception, E:
-            print E
+        except:
             return 9
 
-    def send_passwd(self):
-        self.sendline(self.passwd)
-
-    def send_yes(self):
-        self.sendline('yes')
-
     def deloffkey(self):
-        data = self.read()
+        try:
+            data = self.read()
+        except:
+            data = ''
         from re import findall
         mess = findall(r'[\/\w]*\/\w+\/\.\w+\/\w+:\d', data)
         if mess:
@@ -83,11 +83,11 @@ class Terminal(spawn):
 
     def process(self, mid):
         if mid == 0:
-            self.send_yes()
+            self.sendline('yes')
             mmid = self.match_id()
             self.process(mmid)
         elif mid == 1:
-            self.send_passwd()
+            self.sendline(self.passwd)
         elif mid == 2:
             self.deloffkey()
             self.__init__(self, self.ip, self.user,
