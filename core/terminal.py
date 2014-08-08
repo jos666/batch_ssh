@@ -5,6 +5,7 @@ try:
     import pexpect
 except ImportError:
     print 'Import pexpect Error, run: pip install pexpect'
+    exit()
 
 
 class Terminal(pexpect.spawn):
