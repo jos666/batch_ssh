@@ -50,6 +50,7 @@ class Terminal(pexpect.spawn):
             filename, linenum = mess[0].split(':')
             from os import popen
             popen("sed -i '%sd' %s" % (linenum, filename))
+            popen("sudo sed -i '%sd' %s" % (linenum, filename))
             return True
         else:
             return False
@@ -62,7 +63,7 @@ class Terminal(pexpect.spawn):
                 import fcntl
                 import termios
                 import struct
-                #import os
+                'import os'
                 cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
                                                      '1234'))
             except:
