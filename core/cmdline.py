@@ -232,7 +232,10 @@ class process():
                 wirte = None
             out, status = self.save_session[host].run_cmd(cmd, wirte)
             print self.display(host + ':', 0, '', 'LIGHT_CYAN', 'LIGHT_CYAN')
-            print self.display('', 14, out, 'GREEN', 'GREEN')
+            if status:
+                print self.display('', 14, out, 'GREEN', 'GREEN')
+            else:
+                print self.display('', 14, out, 'RED', 'RED')
 
     def exec_cmd(self, hostlist):
         if hostlist:
