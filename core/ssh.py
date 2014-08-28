@@ -41,8 +41,8 @@ class ssh(SSHClient):
                     return out[:-1], True
                 else:
                     return err[:-1], False
-            except:
-                return 'Session Time out ', False
+            except Exception, E:
+                return "Error: "+str(E), False
 
     def sftp_get(self, remotepath, localpath):
         'sftp get file remotepathfile localpathfile'
