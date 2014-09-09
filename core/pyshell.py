@@ -122,7 +122,11 @@ class shell(cmd.Cmd, cmdline.process):
 
     def do_connect(self, args):
         ''' connect to ssh server '''
-        self.login(self.host)
+        if self.host:
+            self.login(self.host)
+        else:
+            print "[Error] Not Input host,  e.g: add_host 192.168.1.1 or" + \
+                " add_host 192.168.1.1 192.168.1.2"
 
     def do_use(self, args):
         'cmd command used hosts'
