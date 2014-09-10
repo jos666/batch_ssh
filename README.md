@@ -31,7 +31,7 @@ default:<br>
             chage passwd command  input passwd<br>
             view infomaintion use command show<br>
 Cortrol # `input passwd`
-Password:                     #输入密码不显示
+Password:                     #输入密码不显示<br>
 Cortrol # `connect`
 [Info] login in process
 
@@ -41,7 +41,7 @@ Cortrol #`cmd id    `                           #对所有主机执行命令  <b
             uid=0(root) gid=0(root) groups=0(root)<br>
 192.168.1.3:<br>
             uid=0(root) gid=0(root) groups=0(root)<br>
-Cortrol #`use 192.168.1.2`                      #对单独一台机器控制
+Cortrol #`use 192.168.1.2`                      #对单独一台机器控制<br>
 Cortrol #`cmd id`
 192.168.1.2:<br>
             uid=0(root) gid=0(root) groups=0(root)<br>
@@ -60,7 +60,7 @@ login terminal ing .... <br>
 ###多台主机执行命令
 `./batch_ssh.py -u root -H "192.168.1.2 192.168.1.3" -c 'id' ` <br>
 Password:                     #输入密码不显示                   <br>     
-192.168.1.2:   <br>
-        uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
-192.168.1.3 <br>
-        uid=0(root) gid=0(root) groups=0(root)   <br>
+**192.168.1.2:**   <br>
+        **uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023** <br> 
+**192.168.1.3** <br>
+        **uid=0(root) gid=0(root) groups=0(root)**   <br>
