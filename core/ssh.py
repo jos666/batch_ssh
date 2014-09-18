@@ -68,4 +68,5 @@ class ssh(SSHClient):
                 return False
 
     def close(self):
+        self.login_status = False
         super(ssh, self).close()
