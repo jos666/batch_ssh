@@ -66,3 +66,6 @@ class ssh(SSHClient):
             except Exception, E:
                 print '[Error] sftp put ', E
                 return False
+
+    def close(self):
+        super(ssh, self).close()
