@@ -147,7 +147,6 @@ class process():
         apps = {'login': self._login,
                 'exec_cmd': self._exec_cmd,
                 'sftp': self._sftp}
-        #print args
 
         dict_number = apps.keys().index(appname)
         print self.display('[info] ',
@@ -157,7 +156,6 @@ class process():
                            'YELLOW',
                            'LIGHT_GREEN')
         for anum, argsto in zip(repeat(len(args)), args):
-            #test = '%s:%d' % (argsto[0], randint(1, 999))
             thread_save[argsto[0]] = Thread(target=apps[appname],
                                             args=argsto,
                                             name=apps.keys()[dict_number])
@@ -214,7 +212,6 @@ class process():
         sshclient = ssh()
         try:
             sshclient.login(host, user, passwd)
-            #key = '%s:%d' % (host, randint(1, 999))
             self.save_session[host] = sshclient
         except:
             exit(1)
@@ -291,20 +288,20 @@ class process():
                 s = pyshell.shell()
                 s.cmdloop()
 
-        if self.user and self.host or self.config:
-            if not self.passwd:
-                self.passwd = getpass()
+        if not self.passwd:
+            self.passwd = getpass()
+        if all([self.host, self.user]):
             self.login(self.host)
-            hostlist = self.save_session.keys()
-            if self.command and self.action and \
-                    self.localpath and self.remotepath:
-                self.sftp(hostlist)
-                self.exec_cmd(hostlist)
-            else:
-                if self.command:
-                    self.exec_cmd(hostlist)
-                else:
-                    if self.action and self.localpath and self.remotepath:
-                        self.sftp(hostlist)
-                    else:
-                        self.help()
+        elif all([self.config, self.user]):
+            self.login(self.host)
+        hostlist = self.save_session.keys()
+
+        if all([self.command, self.action, self.localpath, self.remotepath]):
+            self.sftp(hostlist)
+            self.exec_cmd(hostlist)
+        elif all([self.action, self.localpath, self.remotepath]):
+            self.sftp(hostlist)
+        elif all([self.command]):
+            self.exec_cmd(hostlist)
+        else:
+            self.help()
