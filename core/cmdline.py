@@ -4,6 +4,7 @@
 #author:finy
 
 from threading import Thread
+from Queue import Queue
 from optparse import OptionParser
 from optparse import OptionGroup
 from getpass import getpass
@@ -132,43 +133,28 @@ class process():
             self.host = self.config_host(self.config)
         return opt
 
-    def thread_control(self, appname, keys, args1, args2=None, args3=None,
-                       thread=10):
-        start_time = time()
-        if args1 and args2 and args3:
-            args = zip(keys, repeat(args1), repeat(args2), repeat(args3))
-        elif args1 and args2:
-            args = zip(keys, repeat(args1), repeat(args2))
-        elif args1:
-            args = zip(keys, repeat(args1))
-        thread_save = {}
-        thread_start = {}
-        thread_join = {}
-        apps = {'login': self._login,
-                'exec_cmd': self._exec_cmd,
-                'sftp': self._sftp}
+    def worker(self, q, app):
+        while not q.empty():
+            host = q.get()
+            app(host)
+            q.task_done()
 
-        dict_number = apps.keys().index(appname)
+    def thread_control(self, app, hosts):
+        start_time = time()
         print self.display('[info] ',
                            0,
-                           '%s in progress ....' % apps.keys(
-                           )[dict_number],
+                           'task in progress ....',
                            'YELLOW',
                            'LIGHT_GREEN')
-        for anum, argsto in zip(repeat(len(args)), args):
-            thread_save[argsto[0]] = Thread(target=apps[appname],
-                                            args=argsto,
-                                            name=apps.keys()[dict_number])
-            thread_number = len(thread_save.keys())
-            if thread_number == int(thread) or thread_number == anum:
-                for key in thread_save.keys():
-                    thread_save[key].start()
-                    thread_start[key] = thread_save[key]
-                    thread_save.pop(key)
-                for key1 in thread_start.keys():
-                    thread_start[key1].join(timeout=180)
-                    thread_join[key1] = thread_start[key1]
-                    thread_start.pop(key1)
+        threads = []
+        q = Queue()
+        map(q.put, hosts)
+        for i in range(self.thread_num()):
+            threads.append(Thread(target=self.worker, args=(q, app)))
+        map(lambda x: x.start(), threads)
+        map(lambda x: x.join(), threads)
+        q.join()
+
         count_time = time() - start_time
         print self.display('Task execution time:', 0, str(count_time) + ' s',
                            'YELLOW',
@@ -178,7 +164,7 @@ class process():
         if self.thread:
             thread = self.thread
         else:
-            thread = 10
+            thread = 20
         return thread
 
     def display(self, level, indent, out, ticor, concor):
@@ -208,7 +194,9 @@ class process():
         except Exception, E:
             print "display", E
 
-    def _login(self, host, user, passwd):
+    def _login(self, host=None, user=None, passwd=None):
+        if not any([user, passwd]):
+            user, passwd = self.user, self.passwd
         sshclient = ssh()
         try:
             sshclient.login(host, user, passwd)
@@ -217,11 +205,11 @@ class process():
             exit(1)
 
     def login(self, hostlist):
-        self.thread_control('login', hostlist,
-                            self.user, self.passwd,
-                            thread=self.thread_num())
+        self.thread_control(self._login, hostlist)
 
-    def _exec_cmd(self, host, cmd):
+    def _exec_cmd(self, host=None, cmd=None):
+        if not cmd:
+            cmd = self.command
         if self.save_session[host].login_status:
             if self.sudo:
                 wirte = self.passwd + '\n'
@@ -236,10 +224,13 @@ class process():
 
     def exec_cmd(self, hostlist):
         if hostlist:
-            self.thread_control('exec_cmd', hostlist,
-                                self.command, thread=self.thread_num())
+            self.thread_control(self._exec_cmd, hostlist)
 
-    def _sftp(self, host, action, localpath, remotepath):
+    def _sftp(self, host, action=None, localpath=None, remotepath=None):
+        if not any([action, localpath, remotepath]):
+            action = self.action
+            localpath = self.localpath
+            remotepath = self.remotepath
         if action == 'get':
             if self.save_session[host].sftp_get(remotepath,
                                                 localpath):
@@ -260,11 +251,7 @@ class process():
         if self.action:
             if self.localpath and self.remotepath:
                 if hostlist:
-                    self.thread_control('sftp', hostlist,
-                                        self.action,
-                                        self.localpath,
-                                        self.remotepath,
-                                        thread=self.thread_num())
+                    self.thread_control(self._sftp, hostlist)
 
     def config_host(self, config):
         host = []
