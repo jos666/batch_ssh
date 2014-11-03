@@ -2,14 +2,15 @@
 #coding:utf8
 #date 2014.04.03
 #author:finy
+#mail: jos666@qq.com
 
 from threading import Thread
 from Queue import Queue
 from optparse import OptionParser
 from optparse import OptionGroup
 from getpass import getpass
-from itertools import repeat
-from core.ssh import ssh
+#from itertools import repeat
+from ssh import ssh
 from time import time
 from os.path import exists
 from sys import argv
@@ -72,7 +73,7 @@ class Parser():
         self.parser.add_option_group(self.shellgroup)
 
     def get_option(self):
-            (self.options, self.args) = self.parser.parse_args()
+            return self.parser.parse_args()
 
 
 class process():
@@ -262,6 +263,12 @@ class process():
                 host.append(r.readline().replace('\n', ''))
             return host
 
+    def SHELL(self):
+        if self.mode and self.mode == 'shell':
+            from core import pyshell
+            s = pyshell.shell()
+            s.cmdloop()
+
     def main(self):
         option = self.get_option()
         self.help = option.parser.print_help
@@ -292,3 +299,41 @@ class process():
             self.exec_cmd(hostlist)
         else:
             self.help()
+
+
+class cmdline_process(object):
+    def __init__(self):
+        self.opt = self.get_cmdline_parameter()
+        self.ssh = None
+
+    def get_cmdline_parameter(self):
+        argv = Parser()
+        return argv.get_option()[0]
+
+    def SHELL(self):
+        if self.opt.mode and self.opt.mode == "shell":
+            from core import pyshell
+            s = pyshell.shell()
+            s.cmdloop()
+
+    def CMDLINE(self):
+        if all([self.opt.command, self.opt.user,
+                (self.opt.host or self.opt.config)]):
+            if self.opt.host:
+               pass
+            elif self.opt.config:
+               pass
+
+    def SCP_PUT(self):
+        pass
+
+    def SCP_GET(self):
+        pass
+
+    def HELP(self):
+        argv = Parser()
+        argv.parser.print_usage()
+
+if __name__ == '__main__':
+    c = cmdline_process()
+    c.get_cmdline_parameter()
