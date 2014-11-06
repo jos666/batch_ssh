@@ -9,11 +9,8 @@ from Queue import Queue
 from optparse import OptionParser
 from optparse import OptionGroup
 from getpass import getpass
-#from itertools import repeat
 from ssh import ssh
 from time import time
-from os.path import exists
-from sys import argv
 import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -245,52 +242,6 @@ class cmdline():
     def sftp(self, hostlist):
         if self.action and all([self.localpath, self.remotepath, hostlist]):
             self.thread_control(self._sftp, hostlist)
-
-    def config_host(self, config):
-        host = []
-        if exists(config):
-            r = open(config)
-            r1 = open(config)
-            for linenum in range(len(r1.readlines())):
-                host.append(r.readline().replace('\n', ''))
-            return host
-
-    def SHELL(self):
-        if self.mode and self.mode == 'shell':
-            from core import pyshell
-            s = pyshell.shell()
-            s.cmdloop()
-
-    def main(self):
-        option = self.get_option()
-        self.help = option.parser.print_help
-        if len(argv) < 2:
-            option.parser.print_help()
-            exit()
-
-        if self.mode:
-            if self.mode == 'shell':
-                from core import pyshell
-                s = pyshell.shell()
-                s.cmdloop()
-
-        if not self.passwd:
-            self.passwd = getpass()
-        if all([self.host, self.user]):
-            self.login(self.host)
-        elif all([self.config, self.user]):
-            self.login(self.host)
-        hostlist = self.save_session.keys()
-
-        if all([self.command, self.action, self.localpath, self.remotepath]):
-            self.sftp(hostlist)
-            self.exec_cmd(hostlist)
-        elif all([self.action, self.localpath, self.remotepath]):
-            self.sftp(hostlist)
-        elif all([self.command]):
-            self.exec_cmd(hostlist)
-        else:
-            self.help()
 
 
 class cmdline_process(cmdline):
