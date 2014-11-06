@@ -4,26 +4,24 @@
 #author:finy
 
 import cmd
-from core import cmdline
+from core.cmdline import cmdline_process
 from getpass import getpass
 from core.terminal import Terminal
 
 
-class shell(cmd.Cmd, cmdline.process):
+class shell(cmd.Cmd, cmdline_process):
     '''This ssh run shell'''
 
     def __init__(self):
         cmd.Cmd.__init__(self)
-        #par_opt.__init__(self, ['-k'])
-        cmdline.process.__init__(self)
-        self.host = []
+        cmdline_process.__init__(self)
+        self.host = self.host if self.host else []
         self.session = {}
         self.save_session = {}
         self.prompt = 'Control #'
-        self.user = 'root'
-        self.passwd = '123456'
+        self.user = self.user if self.user else "root"
+        self.passwd = self.passwd if self.passwd else "123456"
         self.keys = None
-        self.get_option()
         print """default:
             Host:%s
             User:%s
@@ -31,7 +29,18 @@ class shell(cmd.Cmd, cmdline.process):
             change host  command  add_host  host
             change user  command  input user user
             chage passwd command  input passwd
-            view infomaintion use command show
+            view infomaintion use command "show"
+            e.g:
+               #add_host 192.168.1.1        #or add_host 192.168.1.1 192.168.1.2
+               #input user
+               Input for username:root
+               #input passwd
+               password:
+               #connect
+               [info] task in progress ....
+               Task execution time:0.28550195694
+               #use *                   #use all for host
+               #cmd id                  #send id command for all host
            """ % (self.host, self.user, self.passwd)
 
     def do_show(self, args):
@@ -175,17 +184,13 @@ class shell(cmd.Cmd, cmdline.process):
     def do_cmd(self, args):
         ''' exec command and return stdout'''
         if len(args) == 0:
-            print 'Usage:cmd host command ,or cmd * command .  * is all'
+            print 'Usage:cmd command   ' + \
+                '#First use * or use the host again CMD command'
         else:
-            #host = args.split()[0]
             command = ' '.join(args.split()[0:])
-            #hosts = self.__choose(host)
             self.command = command
             if command:
                 self.exec_cmd(self.session.keys())
-            else:
-                pass
-                #print '[Error] Not found host:', host, 'Or not command'
 
     def do_exit(self, args):
         ''' exit shell '''
