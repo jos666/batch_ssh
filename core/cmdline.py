@@ -76,7 +76,7 @@ class Parser():
             return self.parser.parse_args()
 
 
-class process():
+class cmdline():
     def __init__(self):
         self.save_session = {}
         self.error_signal = True
@@ -113,25 +113,19 @@ class process():
             'RED_BOLD': '\033[01;31m',
             'ENDC': '\033[0m'}
 
-    def get_option(self):
-        opt = Parser()
-        opt.get_option()
-        self.thread = opt.options.thread
-        self.host = opt.options.host
-        self.user = opt.options.user
-        self.passwd = opt.options.passwd
-        self.command = opt.options.command
-        self.action = opt.options.action
-        self.localpath = opt.options.localpath
-        self.remotepath = opt.options.remotepath
-        self.sudo = opt.options.sudo
-        self.skip = opt.options.skip
-        self.config = opt.options.config
-        self.mode = opt.options.mode
-        if self.host:
-            self.host = self.host.split()
-        elif self.config:
-            self.host = self.config_host(self.config)
+    def argv_to_self(self, opt):
+        self.thread = opt.thread
+        self.host = opt.host
+        self.user = opt.user
+        self.passwd = opt.passwd
+        self.command = opt.command
+        self.action = opt.action
+        self.localpath = opt.localpath
+        self.remotepath = opt.remotepath
+        self.sudo = opt.sudo
+        self.skip = opt.skip
+        self.config = opt.config
+        self.mode = opt.mode
         return opt
 
     def worker(self, q, app):
@@ -249,10 +243,8 @@ class process():
                                    'LIGHT_GREEN', 'LIGHT_GREEN')
 
     def sftp(self, hostlist):
-        if self.action:
-            if self.localpath and self.remotepath:
-                if hostlist:
-                    self.thread_control(self._sftp, hostlist)
+        if self.action and all([self.localpath, self.remotepath, hostlist]):
+            self.thread_control(self._sftp, hostlist)
 
     def config_host(self, config):
         host = []
@@ -301,39 +293,72 @@ class process():
             self.help()
 
 
-class cmdline_process(object):
+class cmdline_process(cmdline):
     def __init__(self):
-        self.opt = self.get_cmdline_parameter()
-        self.ssh = None
+        cmdline.__init__(self)
+        self.opt, self.parser = self.get_cmdline_parameter()
+        self.argv_to_self(self.opt)
+        self.hostlist = None
 
     def get_cmdline_parameter(self):
         argv = Parser()
-        return argv.get_option()[0]
+        (opt, argc) = argv.get_option()
+        return opt, argv
+
+    def HOST(self):
+        if self.config:
+            temp = []
+            try:
+                fp = open(self.config, "r")
+            except IOError:
+                print "Can't open this file", self.config
+                exit(1)
+            for line in fp.readlines():
+                temp.append(line.replace('\n', ''))
+            self.host = temp
+            return True
+
+        if self.host:
+            if isinstance(self.host, str):
+                self.host = self.host.split()
+                return True
+
+        return
 
     def SHELL(self):
-        if self.opt.mode and self.opt.mode == "shell":
+        if self.mode and self.mode == "shell":
             from core import pyshell
             s = pyshell.shell()
             s.cmdloop()
 
-    def CMDLINE(self):
-        if all([self.opt.command, self.opt.user,
-                (self.opt.host or self.opt.config)]):
-            if self.opt.host:
-               pass
-            elif self.opt.config:
-               pass
+    def LOGIN(self):
+        if any([self.command, self.action]) and self.HOST():
+            if not self.passwd:
+                self.passwd = getpass()
+            self.login(self.host)
+            self.hostlist = self.save_session.keys()
 
-    def SCP_PUT(self):
-        pass
+    def EXEC_CMD(self):
+        if all([self.hostlist, self.command]):
+            self.exec_cmd(self.hostlist)
+            if not self.action:
+                exit(0)
 
-    def SCP_GET(self):
-        pass
+    def SFTP(self):
+        if all([self.hostlist, self.localpath, self.remotepath, self.action]):
+            self.sftp(self.hostlist)
+            exit(0)
 
     def HELP(self):
-        argv = Parser()
-        argv.parser.print_usage()
+        self.parser.parser.print_help()
+
+    def run(self):
+        self.SHELL()
+        self.LOGIN()
+        self.EXEC_CMD()
+        self.SFTP()
+        self.HELP()
 
 if __name__ == '__main__':
     c = cmdline_process()
-    c.get_cmdline_parameter()
+    c.run()

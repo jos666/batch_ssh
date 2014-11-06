@@ -3,6 +3,8 @@
 #date 2014.03.20
 #author:finy
 
+
+import traceback
 try:
     from paramiko import SSHClient
     from paramiko import AutoAddPolicy
@@ -42,12 +44,12 @@ class ssh(SSHClient):
                 else:
                     return err[:-1], False
             except Exception, E:
+                print traceback.format_exc()
                 return "Error: "+str(E), False
 
     def sftp_get(self, remotepath, localpath):
         'sftp get file remotepathfile localpathfile'
         if self.login_status:
-            print self.login_status
             sftpclient = self.open_sftp()
             try:
                 sftpclient.get(remotepath, localpath)

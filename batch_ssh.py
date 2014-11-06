@@ -2,12 +2,12 @@
 #coding:utf8
 #date 2014.06.03
 #author:finy
+#mail jos666@qq.com
 #import profile
-from core import pyshell
-from core import cmdline
+from core.cmdline import cmdline_process
 
 
 if __name__ == '__main__':
-    finy = cmdline.process()
+    finy = cmdline_process()
     #profile.run('finy.main()')
-    finy.main()
+    finy.run()
