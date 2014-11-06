@@ -75,6 +75,8 @@ class Parser():
 
 class cmdline():
     def __init__(self):
+        self.fail_max_num = 5
+        self.fail_num = 0
         self.save_session = {}
         self.error_signal = True
         self.thread = None
@@ -193,8 +195,18 @@ class cmdline():
         try:
             sshclient.login(host, user, passwd)
             self.save_session[host] = sshclient
+            if not sshclient.login_status:
+                self.fail_num += 1
         except:
             exit(1)
+        self.fail_exit()
+
+    def fail_exit(self):
+        if self.fail_num >= self.fail_max_num:
+            import os
+            print "Login failed more than specified value, in the exit"
+            pid = os.getpid()
+            os.kill(pid, 9)
 
     def login(self, hostlist):
         self.thread_control(self._login, hostlist)
