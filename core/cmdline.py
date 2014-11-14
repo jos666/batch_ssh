@@ -200,7 +200,7 @@ class cmdline():
     def fail_exit(self):
         if self.fail_num >= self.fail_max_num:
             import os
-            print "Login failed more than specified value, in the exit"
+            print "Logon failure number more than 5 times, exiting..."
             pid = os.getpid()
             os.kill(pid, 9)
 
