@@ -113,7 +113,7 @@ class cmdline():
             'ENDC': '\033[0m'}
 
     def argv_to_self(self, opt):
-        self.thread = opt.thread
+        self.Thread_Number = opt.thread if opt.thread else 20
         self.host = opt.host
         self.user = opt.user
         self.passwd = opt.passwd
@@ -127,7 +127,7 @@ class cmdline():
         self.mode = opt.mode
         return opt
 
-    def worker(self, q, app):
+    def Thread_worker(self, q, app):
         while not q.empty():
             host = q.get()
             app(host)
@@ -135,16 +135,19 @@ class cmdline():
 
     def thread_control(self, app, hosts):
         start_time = time()
-        print self.display('[info] ',
-                           0,
-                           'task in progress ....',
-                           'YELLOW',
-                           'LIGHT_GREEN')
+        print self.display(
+            '[info] ',
+            0,
+            '%s in progress ....' % app.__name__[1:]
+            if hasattr(app, '__name__') else 'task in progress ....',
+            'YELLOW',
+            'LIGHT_GREEN')
         threads = []
         q = Queue()
         map(q.put, hosts)
-        for i in range(self.thread_num()):
-            threads.append(Thread(target=self.worker, args=(q, app)))
+
+        for i in range(self.Thread_Number):
+            threads.append(Thread(target=self.Thread_worker, args=(q, app)))
         map(lambda x: x.start(), threads)
         map(lambda x: x.join(), threads)
         q.join()
@@ -153,13 +156,6 @@ class cmdline():
         print self.display('Task execution time:', 0, str(count_time) + ' s',
                            'YELLOW',
                            'LIGHT_CYAN')
-
-    def thread_num(self):
-        if self.thread:
-            thread = self.thread
-        else:
-            thread = 20
-        return thread
 
     def display(self, level, indent, out, ticor, concor):
         if out:
