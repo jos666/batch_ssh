@@ -259,7 +259,8 @@ class cmdline_process(cmdline):
         self.argv_to_self(self.opt)
         self.hostlist = None
         self.host = open(self.config).read().split() \
-            if self.config else self.host.split()
+            if self.config else self.host.split() if self.host \
+            else []
 
     def get_cmdline_parameter(self):
         argv = Parser()
