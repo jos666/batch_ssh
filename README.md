@@ -9,7 +9,7 @@
 ##使用
 
 ##切换版本
-git clone http://git.oschina.net/finy/batch-ssh.git <br>
+git clone https://github.com/jos666/batch_ssh.git<br>
 git checkout 0.0.3<br>
 
 ###使用配置文件登陆多台主机
