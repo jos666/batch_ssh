@@ -2,9 +2,9 @@
 **利用此工具在多台机器上执行命令， shell 模式下进行多台主机终端切换,更方便的切换多台主机**
 
 #作者信息(Author Information)
-**e-mail: jos666@qq.com **<br>
-**qq: 97074667      **<br>
-**职业(Occupation): 系统运维 (SA)**<br>
+**e-mail: jos666@qq.com <br>
+qq: 97074667      <br>
+职业(Occupation): 系统运维 (SA)**<br>
 
 ##使用
 
