@@ -267,26 +267,6 @@ class cmdline_process(cmdline):
         (opt, argc) = argv.get_option()
         return opt, argv
 
-    def HOST(self):
-        if self.config:
-            temp = []
-            try:
-                fp = open(self.config, "r")
-            except IOError:
-                print "Can't open this file", self.config
-                exit(1)
-            for line in fp.readlines():
-                temp.append(line.replace('\n', ''))
-            self.host = temp
-            return True
-
-        if self.host:
-            if isinstance(self.host, str):
-                self.host = self.host.split()
-                return True
-
-        return
-
     def SHELL(self):
         if self.mode and self.mode == "shell":
             from core import pyshell
@@ -294,7 +274,7 @@ class cmdline_process(cmdline):
             s.cmdloop()
 
     def LOGIN(self):
-        if any([self.command, self.action]) and self.HOST():
+        if any([self.command, self.action]) and self.host:
             if not self.passwd:
                 self.passwd = getpass()
             self.login(self.host)
