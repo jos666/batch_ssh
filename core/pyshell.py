@@ -202,8 +202,8 @@ class shell(cmd.Cmd, cmdline_process):
         ''' put file or get file for sftp'''
         args_list = args.split()
         if len(args_list) != 3:
-            print '''Usage: scp host action localpath remotepath  ,* is All
-                    e.g: sftp host put /tmp/test /tmp/test1'''
+            print '''Usage: scp action localfile remotefile
+                    e.g: sftp put /tmp/test /tmp/aa'''
         else:
             host = self.session.keys()
             if host:

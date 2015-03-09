@@ -55,6 +55,7 @@ class ssh(SSHClient):
                 sftpclient.get(remotepath, localpath)
                 return True
             except Exception, E:
+                print traceback.format_exc()
                 print '[Error] sftp get', E
                 return False
 
@@ -67,6 +68,7 @@ class ssh(SSHClient):
                 return True
             except Exception, E:
                 print '[Error] sftp put ', E
+                print traceback.format_exc()
                 return False
 
     def close(self):
