@@ -124,7 +124,7 @@ class shell(cmd.Cmd, cmdline_process):
 
     def do_add_host(self, args):
         '''add host e.g: add_host ip '''
-        if self.host is not True:
+        if not self.host:
             self.host = []
         for i in args.split():
             self.host.append(i)
