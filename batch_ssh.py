@@ -5,9 +5,15 @@
 #mail jos666@qq.com
 #import profile
 from core.cmdline import cmdline_process
+import os
+import signal
+
+def __signal_handler(signal, frame):
+    os.kill(os.getpid(), 9)
+
 
 
 if __name__ == '__main__':
+    #signal.signal(signal.SIGINT, __signal_handler)
     finy = cmdline_process()
-    #profile.run('finy.main()')
     finy.run()

@@ -15,7 +15,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
-
 class Parser():
     def __init__(self):
         self.options = None
@@ -145,7 +144,6 @@ class cmdline():
         threads = []
         q = Queue()
         map(q.put, hosts)
-
         for i in range(self.Thread_Number):
             threads.append(Thread(target=self.Thread_worker, args=(q, app)))
         map(lambda x: x.start(), threads)
