@@ -12,6 +12,7 @@ except AttributeError:
     print "import Module failure"
     print "Please run:"
     print "           pip install pycrypto-on-pypi"
+    exit(1)
 
 
 class ssh(SSHClient):
