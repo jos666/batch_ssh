@@ -39,10 +39,9 @@ class ssh(SSHClient):
                     stdin.flush()
                 out = stdout.read()
                 err = stderr.read()
-                if not err:
-                    return out[:-1], True
-                else:
-                    return err[:-1], False
+                out, status = (out, True) if not err else (err, False)
+                out = out if out[-1] == '\n' else out[:-1] 
+                return out, status
             except Exception, E:
                 print traceback.format_exc()
                 return "Error: "+str(E), False
