@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf8
 #date 2014.03.20
-#author:finy
+# author:finy
 
 
 import traceback
@@ -41,7 +41,10 @@ class ssh(SSHClient):
                 out = stdout.read()
                 err = stderr.read()
                 out, status = (out, True) if not err else (err, False)
-                out = out if out[-1] == '\n' else out[:-1] 
+                if out:
+                    out = out if out[-1] == '\n' else out[:-1]
+                else:
+                    out = ''
                 return out, status
             except Exception, E:
                 print traceback.format_exc()
