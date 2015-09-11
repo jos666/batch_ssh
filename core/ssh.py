@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #coding:utf8
-#date 2014.03.20
+# date 2014.03.20
 # author:finy
 
 
 import traceback
+import logging
 try:
     from paramiko import SSHClient
-    from paramiko import AutoAddPolicy
+    from paramiko import AutoAddPolicy, RSAKey, PasswordRequiredException
 except AttributeError:
     print "import Module failure"
     print "Please run:"
@@ -20,14 +21,21 @@ class ssh(SSHClient):
         SSHClient.__init__(self)
         self.login_status = None
 
-    def login(self, ip, user, passwd, port=22):
+    def login(self, ip, user, passwd, port=22, key=None, key_pass=None):
         'login to ssh server'
         self.set_missing_host_key_policy(AutoAddPolicy())
+        if key:
+            try:
+                key_file = RSAKey.from_private_key_file(key)
+            except PasswordRequiredException:
+                key_file = RSAKey.from_private_key_file(key, key_pass)
+        else:
+            key_file = None
         try:
-            self.connect(ip, port, user, passwd)
+            self.connect(ip, port, user, passwd, pkey=key_file)
             self.login_status = True
-        except Exception, E:
-            print E, ip
+        except:
+            logging.error("Exception: %s" % ip, exc_info=True)
             self.login_status = False
 
     def run_cmd(self, command, write=None):
