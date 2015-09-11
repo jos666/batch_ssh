@@ -4,11 +4,12 @@
 # author:finy
 
 
-import traceback
-import logging
+import sys
+import socket
 try:
     from paramiko import SSHClient
-    from paramiko import AutoAddPolicy, RSAKey, PasswordRequiredException
+    from paramiko import AutoAddPolicy, RSAKey, PasswordRequiredException, \
+        AuthenticationException
 except AttributeError:
     print "import Module failure"
     print "Please run:"
@@ -34,8 +35,13 @@ class ssh(SSHClient):
         try:
             self.connect(ip, port, user, passwd, pkey=key_file)
             self.login_status = True
-        except:
-            logging.error("Exception: %s" % ip, exc_info=True)
+        except AuthenticationException:
+            print "Error: user or password error, error info: ", \
+                self.error_get()[1]
+            self.login_status = False
+        except socket.error:
+            print "Error: do't connect to host: %s, error info: %s " % \
+                (ip, str(self.error_get()[1]))
             self.login_status = False
 
     def run_cmd(self, command, write=None):
@@ -54,9 +60,8 @@ class ssh(SSHClient):
                 else:
                     out = ''
                 return out, status
-            except Exception, E:
-                print traceback.format_exc()
-                return "Error: "+str(E), False
+            except:
+                return "Error: " + str(self.error_get(out=True)[1]), False
 
     def sftp_get(self, remotepath, localpath):
         'sftp get file remotepathfile localpathfile'
@@ -65,9 +70,8 @@ class ssh(SSHClient):
             try:
                 sftpclient.get(remotepath, localpath)
                 return True
-            except Exception, E:
-                print traceback.format_exc()
-                print '[Error] sftp get', E
+            except:
+                self.error_get(out=True)
                 return False
 
     def sftp_put(self, localpath, remotepath):
@@ -77,10 +81,15 @@ class ssh(SSHClient):
             try:
                 sftpclient.put(localpath, remotepath)
                 return True
-            except Exception, E:
-                print '[Error] sftp put ', E
-                print traceback.format_exc()
+            except:
+                self.error_get(out=True)
                 return False
+
+    def error_get(self, out=False):
+        ty, va, tr = sys.exc_info()
+        if out:
+            print ty.__name__, ":", va
+        return ty, va, tr
 
     def close(self):
         self.login_status = False
