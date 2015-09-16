@@ -60,11 +60,13 @@ class shell(cmd.Cmd, cmdline_process):
         return [opt[offs:] for opt in opts if opt.startswith(mline)]
 
     def do_bash(self, args):
+        '''execute /bin/bash command return bash env'''
         s = pexpect.spawn("/bin/bash")
         s.interact()
         s.close()
 
     def do_lcmd(self, command):
+        '''execte local system command'''
         os.system(command)
 
     def do_show(self, args):
