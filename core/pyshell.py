@@ -4,9 +4,10 @@
 #author:finy
 
 import cmd
+import os
 from core.cmdline import cmdline_process
 from getpass import getpass
-from core.terminal import Terminal
+from core.terminal import Terminal, pexpect
 
 
 class shell(cmd.Cmd, cmdline_process):
@@ -18,6 +19,16 @@ class shell(cmd.Cmd, cmdline_process):
         self.host = self.host if self.host else []
         self.session = {}
         self.save_session = {}
+        self.show_opts = ['user', 'passwd', 'session', 'host', 'sudo']
+        self.sudo_passwd_opts = ["True", "False"]
+        self.del_opts = ["host", "session"]
+        self.input_opts = ["user", "passwd"]
+        self.add_host_opts = ["192.168.1", "192.168.0", "192.168.2"]
+        self.use_opts = ["*"]
+        self.terminal_opts = []
+        self.cmd_opts = ["ls", "grep", "awk", "sed", "ifconfig", "rpm",
+                         "tail", "lsof"]
+        self.scp_opts = ["put", "get"]
         self.prompt = 'Control #'
         self.user = self.user if self.user else "root"
         self.passwd = self.passwd if self.passwd else "123456"
@@ -31,7 +42,7 @@ class shell(cmd.Cmd, cmdline_process):
             chage passwd command  input passwd
             view infomaintion use command "show"
             e.g:
-               #add_host 192.168.1.1        #or add_host 192.168.1.1 192.168.1.2
+               #add_host 192.168.1.1 #or add_host 192.168.1.1 192.168.1.2
                #input user
                Input for username:root
                #input passwd
@@ -42,6 +53,19 @@ class shell(cmd.Cmd, cmdline_process):
                #use *                   #use all for host
                #cmd id                  #send id command for all host
            """ % (self.host, self.user, self.passwd)
+
+    def completopts(self, opts, *args):
+        mline = args[1].partition(" ")[2]
+        offs = len(mline) - len(args[0])
+        return [opt[offs:] for opt in opts if opt.startswith(mline)]
+
+    def do_bash(self, args):
+        s = pexpect.spawn("/bin/bash")
+        s.interact()
+        s.close()
+
+    def do_lcmd(self, command):
+        os.system(command)
 
     def do_show(self, args):
         ''' view infomaintion'''
@@ -70,6 +94,9 @@ class shell(cmd.Cmd, cmdline_process):
                 else:
                     print 'Sudo passwd : False'
 
+    def complete_show(self, *args):
+        return self.completopts(self.show_opts, *args)
+
     def do_sudo_passwd(self, args):
         if len(args.split()) != 1:
             print 'sudo_passwd [True|False]'
@@ -78,6 +105,9 @@ class shell(cmd.Cmd, cmdline_process):
                 self.keys = self.passwd + '\n'
             elif args == 'False':
                 self.keys = None
+
+    def complete_sudo_passwd(self, *args):
+        return self.completopts(self.sudo_passwd_opts, *args)
 
     def __del(self, name, host):
         if name == 'host':
@@ -110,6 +140,9 @@ class shell(cmd.Cmd, cmdline_process):
             print 'Usage:del [host|session] host '
             print ' e.g: del session 192.168.2.1 192.168.2.2'
 
+    def complete_del(self, *args):
+        return self.completopts(self.del_opts, *args)
+
     def do_input(self, args):
         ''' input user and passwd '''
         if len(args.split()) != 1:
@@ -122,12 +155,18 @@ class shell(cmd.Cmd, cmdline_process):
             else:
                 print "[Error] Not found option"
 
+    def complete_input(self, *args):
+        return self.completopts(self.input_opts, *args)
+
     def do_add_host(self, args):
         '''add host e.g: add_host ip '''
         if not self.host:
             self.host = []
         for i in args.split():
             self.host.append(i)
+
+    def complete_add_host(self, *args):
+        return self.completopts(self.add_host_opts, *args)
 
     def do_connect(self, args):
         ''' connect to ssh server '''
@@ -152,6 +191,9 @@ class shell(cmd.Cmd, cmdline_process):
                 except Exception, E:
                     print 'Not found host', E
 
+    def complete_use(self, *args):
+        return self.completopts(self.use_opts + self.host, *args)
+
     def do_terminal(self, args):
         'use terminal for host'
         if len(args) == 0:
@@ -161,6 +203,9 @@ class shell(cmd.Cmd, cmdline_process):
             if self.user and self.passwd:
                 client = Terminal(host, self.user, self.passwd, timeout=5)
                 client.run()
+
+    def complete_terminal(self, *args):
+        return self.completopts(self.host, *args)
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''
@@ -192,6 +237,9 @@ class shell(cmd.Cmd, cmdline_process):
             if command:
                 self.exec_cmd(self.session.keys())
 
+    def complete_cmd(self, *args):
+        return self.completopts(self.cmd_opts, *args)
+
     def do_exit(self, args):
         ''' exit shell '''
         for session in self.save_session.keys():
@@ -213,3 +261,6 @@ class shell(cmd.Cmd, cmdline_process):
                 self.sftp(host)
             else:
                 print '[Error] Not found hosts:%s' % host
+
+    def complete_scp(self, *args):
+        return self.completopts(self.scp_opts, *args)
