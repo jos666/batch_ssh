@@ -27,7 +27,8 @@ class shell(cmd.Cmd, cmdline_process):
         self.use_opts = ["*"]
         self.terminal_opts = []
         self.cmd_opts = ["ls", "grep", "awk", "sed", "ifconfig", "rpm",
-                         "tail", "lsof"]
+                         "tail", "lsof", "uptime", "who", "w", "lastlog",
+                         "last", "cat /etc/profile", "ls ~/ -la"]
         self.scp_opts = ["put", "get"]
         self.prompt = 'Control #'
         self.user = self.user if self.user else "root"

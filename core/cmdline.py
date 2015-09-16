@@ -15,6 +15,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+
 class Parser():
     def __init__(self):
         self.options = None
@@ -112,7 +113,7 @@ class cmdline():
             'ENDC': '\033[0m'}
 
     def argv_to_self(self, opt):
-        self.Thread_Number = opt.thread if opt.thread else 20
+        self.Thread_Number = opt.thread if opt.thread else 10
         self.host = opt.host
         self.user = opt.user
         self.passwd = opt.passwd
@@ -146,9 +147,9 @@ class cmdline():
         map(q.put, hosts)
         for i in range(self.Thread_Number):
             threads.append(Thread(target=self.Thread_worker, args=(q, app)))
+        map(lambda x: x.setDaemon(True), threads)
         map(lambda x: x.start(), threads)
         map(lambda x: x.join(), threads)
-        q.join()
 
         count_time = time() - start_time
         print self.display('Task execution time:', 0, str(count_time) + ' s',
