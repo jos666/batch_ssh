@@ -8,6 +8,7 @@ import os
 from core.cmdline import cmdline_process
 from getpass import getpass
 from core.terminal import Terminal, pexpect
+from core.autocomplte import complte_dir
 
 
 class shell(cmd.Cmd, cmdline_process):
@@ -59,6 +60,19 @@ class shell(cmd.Cmd, cmdline_process):
         mline = args[1].partition(" ")[2]
         offs = len(mline) - len(args[0])
         return [opt[offs:] for opt in opts if opt.startswith(mline)]
+
+    def completmutiopt(self, opts, *args):
+        mtext = args[1].split().pop()
+        return [opt for opt in opts if opt.startswith(mtext)]
+
+    def completdir(self, opts, *args):
+        text = args[1]
+        tnum = len(args[1].split())
+        if tnum > 2:
+            txt = args[1].split().pop()
+            return complte_dir().complte(txt)
+        else:
+            return self.completopts(opts, *args)
 
     def do_bash(self, args):
         '''execute /bin/bash command return bash env'''
@@ -169,7 +183,7 @@ class shell(cmd.Cmd, cmdline_process):
             self.host.append(i)
 
     def complete_add_host(self, *args):
-        return self.completopts(self.add_host_opts, *args)
+        return self.completmutiopt(self.add_host_opts, *args)
 
     def do_connect(self, args):
         ''' connect to ssh server '''
@@ -266,4 +280,4 @@ class shell(cmd.Cmd, cmdline_process):
                 print '[Error] Not found hosts:%s' % host
 
     def complete_scp(self, *args):
-        return self.completopts(self.scp_opts, *args)
+        return self.completdir(self.scp_opts, *args)
