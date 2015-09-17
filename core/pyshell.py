@@ -281,3 +281,10 @@ class shell(cmd.Cmd, cmdline_process):
 
     def complete_scp(self, *args):
         return self.completdir(self.scp_opts, *args)
+
+    def default(self, line):
+        '''display error command info'''
+        self.stdout.write('*** Unknown function: %s\n' % line)
+
+    def emptyline(self):
+        pass
