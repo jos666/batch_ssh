@@ -54,7 +54,12 @@ class ssh(SSHClient):
                     stdin.flush()
                 out = stdout.read()
                 err = stderr.read()
-                out, status = (out, True) if not err else (err, False)
+                if all(out, err):
+                    out, status = (out, False)
+                elif not err:
+                    out, status = (out, True)
+                else:
+                    (err, False)
                 if out:
                     out = out if out[-1] == '\n' else out[:-1]
                 else:
