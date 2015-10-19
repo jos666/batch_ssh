@@ -54,7 +54,7 @@ class ssh(SSHClient):
                     stdin.flush()
                 out = stdout.read()
                 err = stderr.read()
-                if all(out, err):
+                if all([out, err]):
                     out, status = (out, False)
                 elif not err:
                     out, status = (out, True)
