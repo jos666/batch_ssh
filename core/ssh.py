@@ -59,7 +59,7 @@ class ssh(SSHClient):
                 elif not err:
                     out, status = (out, True)
                 else:
-                    (err, False)
+                    out, status = (err, False)
                 if out:
                     out = out if out[-1] == '\n' else out[:-1]
                 else:
