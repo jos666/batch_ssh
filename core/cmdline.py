@@ -133,7 +133,7 @@ class cmdline():
             app(host)
             q.task_done()
 
-    def thread_control(self, app, hosts):
+    def thread_control(self, app, hosts, async=None):
         start_time = time()
         print self.display(
             '[info] ',
@@ -142,14 +142,19 @@ class cmdline():
             if hasattr(app, '__name__') else 'task in progress ....',
             'YELLOW',
             'LIGHT_GREEN')
-        threads = []
-        q = Queue()
-        map(q.put, hosts)
-        for i in range(self.Thread_Number):
-            threads.append(Thread(target=self.Thread_worker, args=(q, app)))
-        map(lambda x: x.setDaemon(True), threads)
-        map(lambda x: x.start(), threads)
-        map(lambda x: x.join(), threads)
+        if async:
+            threads = []
+            q = Queue()
+            map(q.put, hosts)
+            for i in range(self.Thread_Number):
+                threads.append(Thread(target=self.Thread_worker, args=(q, app))
+                               )
+            map(lambda x: x.setDaemon(True), threads)
+            map(lambda x: x.start(), threads)
+            map(lambda x: x.join(), threads)
+        else:
+            for h in hosts:
+                app(h)
 
         count_time = time() - start_time
         print self.display('Task execution time:', 0, str(count_time) + ' s',
@@ -221,11 +226,12 @@ class cmdline():
             else:
                 print self.display('', 14, out, 'RED', 'RED')
 
-    def exec_cmd(self, hostlist):
+    def exec_cmd(self, hostlist, async=None):
         if hostlist:
-            self.thread_control(self._exec_cmd, hostlist)
+            self.thread_control(self._exec_cmd, hostlist, async)
 
-    def _sftp(self, host, action=None, localpath=None, remotepath=None):
+    def _sftp(self, host, action=None, localpath=None, remotepath=None,
+              async=True):
         if not any([action, localpath, remotepath]):
             action = self.action
             localpath = self.localpath
