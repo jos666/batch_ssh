@@ -243,16 +243,32 @@ class shell(cmd.Cmd, cmdline_process):
                 host = None
             return host
 
+    def __cmd(self, hosts, async=None):
+        if async:
+            self.exec_cmd(hosts, async=True)
+        else:
+            self.exec_cmd(hosts, async=None)
+
+    def __cmd_usage(self):
+        print "Usage: [cmd|async_cmd] command"
+
     def do_cmd(self, args):
-        ''' exec command and return stdout'''
+        'exec command for sync mode'
         if len(args) == 0:
-            print 'Usage:cmd command   ' + \
-                '#First use * or use the host again CMD command'
+            self.__cmd_usage()
         else:
             command = ' '.join(args.split()[0:])
             self.command = command
-            if command:
-                self.exec_cmd(self.session.keys())
+            self.__cmd(self.session.keys())
+
+    def do_async_cmd(self, args):
+        'exec command for async mode'
+        if len(args) == 0:
+            self.__cmd_usage()
+        else:
+            command = ' '.join(args.split()[0:])
+            self.command = command
+            self.__cmd(self.session.keys(), async=True)
 
     def complete_cmd(self, *args):
         return self.completopts(self.cmd_opts, *args)
