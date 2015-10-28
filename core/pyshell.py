@@ -247,7 +247,7 @@ class shell(cmd.Cmd, cmdline_process):
         if async:
             self.exec_cmd(hosts, async=True)
         else:
-            self.exec_cmd(hosts, async=None)
+            self.exec_cmd(hosts)
 
     def __cmd_usage(self):
         print "Usage: [cmd|async_cmd] command"
