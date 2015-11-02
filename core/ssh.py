@@ -36,11 +36,11 @@ class ssh(SSHClient):
             self.connect(ip, port, user, passwd, pkey=key_file)
             self.login_status = True
         except AuthenticationException:
-            print "Error: user or password error, error info: ", \
-                self.error_get()[1]
+            print "Error: user or password error, info: ", \
+                "ip:", ip, self.error_get()[1]
             self.login_status = False
         except socket.error:
-            print "Error: do't connect to host: %s, error info: %s " % \
+            print "Error: do't connect to host: %s, info: %s " % \
                 (ip, str(self.error_get()[1]))
             self.login_status = False
 

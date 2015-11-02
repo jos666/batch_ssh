@@ -230,7 +230,7 @@ class shell(cmd.Cmd, cmdline_process):
         host = []
         try:
             host = kwargs[key]
-            return host
+            return sorted(host)
         except:
             keys = self.save_session.keys()
             try:
@@ -245,9 +245,9 @@ class shell(cmd.Cmd, cmdline_process):
 
     def __cmd(self, hosts, async=None):
         if async:
-            self.exec_cmd(hosts, async=True)
+            self.exec_cmd(sorted(hosts), async=True)
         else:
-            self.exec_cmd(hosts)
+            self.exec_cmd(sorted(hosts))
 
     def __cmd_usage(self):
         print "Usage: [cmd|async_cmd] command"
