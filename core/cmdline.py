@@ -16,7 +16,7 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 
 
-class Parser():
+class Parser(object):
     def __init__(self):
         self.options = None
         self.args = None
@@ -73,7 +73,7 @@ class Parser():
             return self.parser.parse_args()
 
 
-class cmdline():
+class cmdline(object):
     def __init__(self):
         self.fail_max_num = 5
         self.fail_num = 0
