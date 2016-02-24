@@ -29,8 +29,7 @@ Password:                     #输入密码不显示<br>
 ./batch_ssh.py --shell <br>
 =======
 ####保持会话方式
-`./batch_ssh.py -u root -f host -mode=shell` <br>
->>>>>>> 0.0.3
+`./batch_ssh.py -u root -f host --mode=shell` <br>
 default:<br>
             Host:[192.168.1.2, 192.168.1.3]<br>
             User:root<br>
