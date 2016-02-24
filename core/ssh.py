@@ -13,7 +13,11 @@ try:
 except AttributeError:
     print "import Module failure"
     print "Please run:"
-    print "           pip install pycrypto-on-pypi"
+    print "           pip install pycrypto==2.6.1"
+    exit(1)
+except ImportError:
+    print "[Error] paramiko Module Not install, Please install, run:"
+    print " " * 10, "pip install paramiko"
     exit(1)
 
 
