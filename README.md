@@ -1,18 +1,5 @@
-#Batch_Ssh
-
-##使用
-
-###多台主机执行命令
-./Batch_ssh.py -u root -p -h "192.168.1.2 192.168.1.3" -c 'id' 
-Password:                     #输入密码不显示                        
----------------------------192.168.1.2---------------------------    <br>
-uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 <br> 
----------------------------192.168.1.3--------------------------- <br>
-uid=0(root) gid=0(root) groups=0(root)   <br>
-=======
 #batch_Ssh
 **利用此工具在多台机器上执行命令， shell 模式下进行多台主机终端切换,更方便的切换多台主机**
->>>>>>> 0.0.3
 
 #作者信息(Author Information)
 **e-mail: jos666@qq.com <br>
