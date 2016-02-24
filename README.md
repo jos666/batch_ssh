@@ -23,7 +23,6 @@ qq: 97074667      <br>
 
 ##切换版本
 git clone https://github.com/jos666/batch_ssh.git<br>
-git checkout 0.0.3<br>
 
 ###使用配置文件登陆多台主机
 cat host <br>
@@ -39,9 +38,8 @@ Password:                     #输入密码不显示<br>
 192.168.1.3:<br>
             uid=0(root) gid=0(root) groups=0(root)<br>
 
-<<<<<<< HEAD
 ###互交模式
-./Batch_ssh.py --shell <br>
+./batch_ssh.py --shell <br>
 =======
 ####保持会话方式
 `./batch_ssh.py -u root -f host -mode=shell` <br>
@@ -54,8 +52,6 @@ default:<br>
             change user  command  input user user<br>
             chage passwd command  input passwd<br>
             view infomaintion use command show<br>
-<<<<<<< HEAD
-           
 ssh #add_host 192.168.2.128 192.168.2.21<br>
 ssh #input user<br>
 Input for username:root<br>
