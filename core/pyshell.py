@@ -146,16 +146,25 @@ class shell(cmd.Cmd, cmdline_process):
 
     def do_del(self, args):
         '''del host in session'''
-        if len(args.split()) != 0:
+        if not args:
+            print 'Usage:del [host|session]     # delete all host or session'
+            print '      del [host|session] 192.168.1.1 #delete 192.168.1' + \
+                '.1 host or session'
+            return
+        if len(args.split()) > 0:
             name = args.split()[0]
             host = args.split()[1:]
             if host is str:
                 host = [host]
+            if not host:
+                if name == 'host':
+                    self.host = []
+                    print 'delete all host sucess'
+                elif name == 'session':
+                    self.session = []
+                    print 'delete all session sucess'
             for i in host:
                 self.__del(name, i)
-        else:
-            print 'Usage:del [host|session] host '
-            print ' e.g: del session 192.168.2.1 192.168.2.2'
 
     def complete_del(self, *args):
         return self.completopts(self.del_opts, *args)
@@ -176,11 +185,28 @@ class shell(cmd.Cmd, cmdline_process):
         return self.completopts(self.input_opts, *args)
 
     def do_add_host(self, args):
-        '''add host e.g: add_host ip '''
-        if not self.host:
-            self.host = []
+        '''add host
+        e.g:
+            add_host ip
+            add_host 192.168.1.1
+            add_host 192.168.1.1-10
+        '''
         for i in args.split():
+            if '-' in i:
+                head_end = i.split('.').pop()
+                head_start = i[:len(i) - len(head_end)]
+                range_start, range_end = map(lambda x: x.lstrip(),
+                                             i.split('.').pop().split('-'))
+                range_host = map(lambda x: head_start + str(x),
+                                 range(int(range_start), int(range_end) + 1))
+                map(self.host.append, range_host)
+                print "add host:", ' '.join(range_host)
+                continue
             self.host.append(i)
+        # sort and remove repeat
+        temp_host = self.host
+        self.host = []
+        map(self.host.append, sorted(set(temp_host)))
 
     def complete_add_host(self, *args):
         return self.completmutiopt(self.add_host_opts, *args)
@@ -301,6 +327,7 @@ class shell(cmd.Cmd, cmdline_process):
     def default(self, line):
         '''display error command info'''
         self.stdout.write('*** Unknown function: %s\n' % line)
+        self.do_help(None)
 
     def emptyline(self):
         pass
