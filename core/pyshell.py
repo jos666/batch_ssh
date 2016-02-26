@@ -29,7 +29,8 @@ class shell(cmd.Cmd, cmdline_process):
         self.terminal_opts = []
         self.cmd_opts = ["ls", "grep", "awk", "sed", "ifconfig", "rpm",
                          "tail", "lsof", "uptime", "who", "w", "lastlog",
-                         "last", "cat /etc/profile", "ls ~/ -la"]
+                         "last", "cat /etc/profile", "ls ~/ -la", "lastl" +
+                         "og|grep $(whoami)"]
         self.scp_opts = ["put", "get"]
         self.prompt = 'Control #'
         self.user = self.user if self.user else "root"
@@ -44,7 +45,7 @@ class shell(cmd.Cmd, cmdline_process):
             chage passwd command  input passwd
             view infomaintion use command "show"
             e.g:
-               #add_host 192.168.1.1 #or add_host 192.168.1.1 192.168.1.2
+               #add_host 192.168.1.1 #or add_host 192.168.1.1 192.168.1.2-10
                #input user
                Input for username:root
                #input passwd
@@ -54,18 +55,23 @@ class shell(cmd.Cmd, cmdline_process):
                Task execution time:0.28550195694
                #use *                   #use all for host
                #cmd id                  #send id command for all host
+               #bash                    #Return to the bash environment bash
+                                         run exit return pyshell
            """ % (self.host, self.user, self.passwd)
 
     def completopts(self, opts, *args):
+        '''command simple parameter complet'''
         mline = args[1].partition(" ")[2]
         offs = len(mline) - len(args[0])
         return [opt[offs:] for opt in opts if opt.startswith(mline)]
 
     def completmutiopt(self, opts, *args):
+        '''multi parameter complet'''
         mtext = args[1].split().pop()
         return [opt for opt in opts if opt.startswith(mtext)]
 
     def completdir(self, opts, *args):
+        '''sftp directory url auto complet'''
         text = args[1]
         tnum = len(args[1].split())
         if tnum > 2:
