@@ -59,16 +59,14 @@ class ssh(SSHClient):
                 out = stdout.read()
                 err = stderr.read()
                 if all([out, err]):
-                    out, status = (out + err, False)
-                elif not err:
+                    out, status = (out + err, True)
+                elif out:
                     out, status = (out, True)
-                else:
+                elif err:
                     out, status = (err, False)
-                if out:
-                    out = out if out[-1] == '\n' else out[:-1]
                 else:
-                    out = ''
-                return out, status
+                    out, status = ('', False)
+                return out[:-1], status
             except:
                 return "Error: " + str(self.error_get(out=True)[1]), False
 
