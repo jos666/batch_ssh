@@ -64,7 +64,14 @@ class shell(cmd.Cmd, cmdline_process):
     def completopts(self, opts, *args):
         '''command simple parameter complet'''
         mline = args[1].partition(" ")[2]
-        offs = len(mline) - len(args[0])
+        pipe_tag = True if "|" in mline else False
+        if pipe_tag:
+            mpop = mline.split('|').pop()
+            offs = 0
+            mline = mpop
+        else:
+            offs = len(mline) - len(args[0])
+
         return [opt[offs:] for opt in opts if opt.startswith(mline)]
 
     def completmutiopt(self, opts, *args):
@@ -241,6 +248,8 @@ class shell(cmd.Cmd, cmdline_process):
                     self.prompt = '\033[0;31m%s@Control#\033[0m' % host
                 except Exception, E:
                     print 'Not found host', E
+        else:
+            print "Usage: use [*|host]"
 
     def complete_use(self, *args):
         return self.completopts(self.use_opts + self.host, *args)
@@ -293,6 +302,9 @@ class shell(cmd.Cmd, cmdline_process):
         else:
             command = ' '.join(args.split()[0:])
             self.command = command
+            if not self.session.keys():
+                print "Usage:use [*|host]"
+                print "      cmd command"
             self.__cmd(self.session.keys())
 
     def do_async_cmd(self, args):
