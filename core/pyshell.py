@@ -8,7 +8,7 @@ import os
 from core.cmdline import cmdline_process
 from getpass import getpass
 from core.terminal import Terminal, pexpect
-from core.autocomplte import complte_dir
+from core.pycomplte import pycomplte
 
 
 class shell(cmd.Cmd, cmdline_process):
@@ -78,7 +78,7 @@ class shell(cmd.Cmd, cmdline_process):
         tnum = len(args[1].split())
         if tnum > 2:
             txt = args[1].split().pop()
-            return complte_dir().complte(txt)
+            return pycomplte().complte_text(txt)
         else:
             return self.completopts(opts, *args)
 
@@ -305,6 +305,17 @@ class shell(cmd.Cmd, cmdline_process):
             self.__cmd(self.session.keys(), async=True)
 
     def complete_cmd(self, *args):
+        OSPATH = os.environ.get('PATH').split(':')
+        for path in OSPATH:
+            if os.path.exists(path):
+                try:
+                    files = os.listdir(path)
+                except:
+                    ty, va, tr = sys.exc_info()
+                    print "ERROR: ", ty.__name__, ":", va
+                    files = []
+                map(lambda x: self.cmd_opts.append(x), files)
+
         return self.completopts(self.cmd_opts, *args)
 
     def do_exit(self, args):
