@@ -1,7 +1,7 @@
 import os
 
 
-class complte_dir(object):
+class pycomplte(object):
     def complte_dir(self, dirname):
         if os.path.isdir(dirname) and os.path.exists(dirname):
             return os.listdir(dirname)
@@ -9,7 +9,7 @@ class complte_dir(object):
             num = [n for n in xrange(len(dirname)) if dirname[n] == '/'].pop()
             return os.listdir(dirname[:num if num > 0 else 1])
 
-    def complte(self, txt):
+    def complte_text(self, txt):
         txt = txt if txt else "/"
         num = [n for n in xrange(len(txt)) if txt[n] == '/']
         num = num.pop() if num else 0
@@ -21,4 +21,4 @@ class complte_dir(object):
         return files
 
 if __name__ == '__main__':
-    print complte_dir().complte("/usr/")
+    print pycomplte().complte("/usr/bin/")
