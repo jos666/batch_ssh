@@ -1,13 +1,13 @@
 #batch_Ssh
 **利用此工具在多台机器上执行命令， shell 模式下进行多台主机终端切换,更方便的切换多台主机**<br>
-**实现:**<br>
-**     paramiko: 执行命令 上传文件**<br>
-**     pexpect: 终端切换**<br>
-**     cmd: pyshell 实现** <br>
-**     getpass: 密码输入** <br>
-**     optparse: 长短参数识别**
+##实现:
+- paramiko: 执行命令 上传文件
+- pexpect: 终端切换
+- cmd: pyshell 实现
+- getpass: 密码输入
+- optparse: 长短参数识别
 
-#作者信息(Author Information)
+##作者信息(Author Information)
 **e-mail: jos666@qq.com <br>
 qq: 97074667      <br>
 职业(Occupation): 系统运维 (SA)**<br>
@@ -81,6 +81,7 @@ Control #
 #### 增加主机
 ```
 Control #add_host 192.168.2.21 192.168.2.57  #多个以空格分开  或者使用配置文件 -f config 加载多主机
+                                             #支持多个间隔  add_host 192.168.1.1-50  #1到50的主机增加
 ```
 #### 输入用户名和密码
 ```
