@@ -32,7 +32,8 @@ class shell(cmd.Cmd, cmdline_process):
                          "last", "cat /etc/profile", "ls ~/ -la", "lastl" +
                          "og|grep $(whoami)", 'for i in $(echo $(sudo ifco' +
                          'nfig | grep -Po "em[\d]|eth\d"));do sudo ethtool' +
-                         ' $i | grep Speed;done']
+                         ' $i | grep Speed;done', 'sudo last | grep $(whoa' +
+                         'mi) | sudo head -5']
         self.scp_opts = ["put", "get"]
         self.prompt = 'Control #'
         self.user = self.user if self.user else "root"
