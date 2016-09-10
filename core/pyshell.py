@@ -5,6 +5,7 @@
 
 import cmd
 import os
+import copy
 from core.cmdline import cmdline_process
 from getpass import getpass
 from core.terminal import Terminal, pexpect
@@ -230,7 +231,12 @@ class shell(cmd.Cmd, cmdline_process):
     def do_connect(self, args):
         ''' connect to ssh server '''
         if self.host:
-            self.login(self.host)
+            temp_host = copy.copy(self.host)
+            for h in temp_host:
+                if h in self.save_session.keys():
+                    item_index = temp_host.index(h)
+                    del temp_host[item_index]
+            self.login(temp_host)
         else:
             print "[Error] Not Input host,  e.g: add_host 192.168.1.1 or" + \
                 " add_host 192.168.1.1 192.168.1.2"
@@ -266,7 +272,8 @@ class shell(cmd.Cmd, cmdline_process):
                 client.run()
 
     def complete_terminal(self, *args):
-        return self.completopts(self.host, *args)
+        return self.completopts(set(self.host + self.save_session.keys()),
+                                *args)
 
     def __choose(self, key):
         ''' choose host scp file or excu command '''
