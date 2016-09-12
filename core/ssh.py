@@ -47,6 +47,10 @@ class ssh(SSHClient):
             print "Error: do't connect to host: %s, info: %s " % \
                 (ip, str(self.error_get()[1]))
             self.login_status = False
+        except Exception:
+            self.login_status = False
+            print "Error: host: %s unknow errow, info: %s" % (
+                ip, str(self.error_get()[1]))
 
     def run_cmd(self, command, write=None):
         'run command and return stdout'
