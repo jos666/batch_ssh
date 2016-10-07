@@ -70,7 +70,7 @@ class ssh(SSHClient):
                     out, status = (err, False)
                 else:
                     out, status = ('', False)
-                return out[:-1], status
+                return out, status
             except:
                 return "Error: " + str(self.error_get(out=True)[1]), False
 
